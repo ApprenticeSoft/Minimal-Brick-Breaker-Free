@@ -217,16 +217,19 @@ public class GameScreen extends InputAdapter implements Screen{
 			pauseButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
 			
 			labelStyle = new LabelStyle(game.assets.get("font1.ttf", BitmapFont.class), Color.WHITE);
+			float endScreenLabelScale = webBuild ? 1f : 2f;
+			float endScreenButtonWidth = webBuild ? Gdx.graphics.getWidth() / 3.6f : Gdx.graphics.getWidth() / 3f;
+			float endScreenButtonGap = webBuild ? Gdx.graphics.getWidth() / 400f : 0f;
 			labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
-			labelComplete.setFontScale(2f);
+			labelComplete.setFontScale(endScreenLabelScale);
 			labelComplete.setAlignment(Align.center);
 		
 		tableFin = new Table();
 		tableFin.row().colspan(2);
 		tableFin.add(labelComplete).spaceBottom(Gdx.graphics.getHeight()/30);
-		tableFin.row().height(Gdx.graphics.getHeight()/12).width(Gdx.graphics.getWidth()/3);
-		tableFin.add(nextBouton);
-		tableFin.add(replayBouton);
+		tableFin.row().height(Gdx.graphics.getHeight()/12);
+		tableFin.add(nextBouton).width(endScreenButtonWidth).padRight(endScreenButtonGap);
+		tableFin.add(replayBouton).width(endScreenButtonWidth);
 		tableFin.setX(-Gdx.graphics.getWidth()/2);
 		tableFin.setY(Gdx.graphics.getHeight()/2 + tableFin.getPrefHeight()/4);
 		
@@ -259,16 +262,16 @@ public class GameScreen extends InputAdapter implements Screen{
 		//Table perdu
 		tablePerdu = new Table();
 		labelPerdu = new Label(gam.langue.perdu, labelStyle);
-		labelPerdu.setFontScale(2f);
+		labelPerdu.setFontScale(endScreenLabelScale);
 		labelPerdu.setAlignment(Align.center);
 		restartBouton2 = new TextButton(gam.langue.rejouer, textButtonStyle);	
 		menuBouton2 = new TextButton(gam.langue.menu, textButtonStyle);
 		
 		tablePerdu.row().colspan(2);
 		tablePerdu.add(labelPerdu).spaceBottom(Gdx.graphics.getHeight()/30);
-		tablePerdu.row().height(Gdx.graphics.getHeight()/12).width(Gdx.graphics.getWidth()/3);
-		tablePerdu.add(restartBouton2);
-		tablePerdu.add(menuBouton2);
+		tablePerdu.row().height(Gdx.graphics.getHeight()/12);
+		tablePerdu.add(restartBouton2).width(endScreenButtonWidth).padRight(endScreenButtonGap);
+		tablePerdu.add(menuBouton2).width(endScreenButtonWidth);
 		tablePerdu.setX(-Gdx.graphics.getWidth()/2);
 		tablePerdu.setY(Gdx.graphics.getHeight()/2 + tablePerdu.getPrefHeight()/4);
 		
