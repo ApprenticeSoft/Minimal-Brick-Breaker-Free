@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -22,7 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.MyGdxGame;
-import com.minimal.brick.breaker.free.GameConstants;
+import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class OptionScreen implements Screen{
 	
@@ -31,7 +32,7 @@ public class OptionScreen implements Screen{
 	private Stage stage;
 	private Skin skin;
 	private TextureAtlas textureAtlas;
-	private TextButton langueBouton, vitesseBouton, rateBouton, moreAppsBouton, retourBouton, sonBouton, 
+	private TextButton langueBouton, vitesseBouton, retourBouton, sonBouton, 
 						lentBouton, normalBouton, rapideBouton,
 						englishBouton, francaisBouton, espanolBouton,
 						onBouton, offBouton;
@@ -75,8 +76,6 @@ public class OptionScreen implements Screen{
 		//Menu général
 		langueBouton = new TextButton(gam.langue.langage, menuButtonStyle);
 		vitesseBouton = new TextButton(gam.langue.vitesse, menuButtonStyle);
-		rateBouton = new TextButton(gam.langue.noter, menuButtonStyle);
-		moreAppsBouton = new TextButton(gam.langue.plusDApp, menuButtonStyle);
 		sonBouton = new TextButton(gam.langue.sons, menuButtonStyle);
 		retourBouton = new TextButton("<", menuButtonStyle);
 		//Menu Vitesse
@@ -111,8 +110,6 @@ public class OptionScreen implements Screen{
 		langueBouton.setVisible(false);
 		vitesseBouton.setVisible(false);
 		sonBouton.setVisible(false);
-		rateBouton.setVisible(false);
-		moreAppsBouton.setVisible(false);
 		lentBouton.setVisible(false);
 		normalBouton.setVisible(false);
 		rapideBouton.setVisible(false);
@@ -126,8 +123,6 @@ public class OptionScreen implements Screen{
 		optionTable.add(langueBouton).row();
 		optionTable.add(vitesseBouton).row();
 		optionTable.add(sonBouton).row();
-		optionTable.add(rateBouton).row();
-		optionTable.add(moreAppsBouton).row();
 		optionTable.add(retourBouton).height(Gdx.graphics.getWidth()/7).width(Gdx.graphics.getWidth()/7).left().spaceTop(5*Gdx.graphics.getHeight()/100);
 		optionTable.setX(14*Gdx.graphics.getWidth()/100);
 		optionTable.setY(Gdx.graphics.getHeight()/2);
@@ -140,6 +135,7 @@ public class OptionScreen implements Screen{
 		transitionImage.setX(-Gdx.graphics.getWidth());
 		transitionImage.setY(0);
 		transitionImage.addAction(Actions.alpha(0));
+		transitionImage.setTouchable(Touchable.disabled);
 
 		stage.addActor(rapideBouton);
 		stage.addActor(normalBouton);
@@ -214,16 +210,12 @@ public class OptionScreen implements Screen{
 		langueBouton.addAction(Actions.parallel(Actions.alpha(0), 
 												Actions.addAction(Actions.alpha(0), vitesseBouton), 
 												Actions.addAction(Actions.alpha(0), sonBouton),
-												Actions.addAction(Actions.alpha(0), rateBouton),
-												Actions.addAction(Actions.alpha(0), moreAppsBouton),
 												Actions.run(new Runnable() {
 										            @Override
 										            public void run() {
 										            	langueBouton.setVisible(true);
 											    		vitesseBouton.setVisible(true);
 											    		sonBouton.setVisible(true);
-											    		rateBouton.setVisible(true);
-											    		moreAppsBouton.setVisible(true);	
 										            }})));
 		
 		langueBouton.addAction(Actions.sequence(Actions.delay(0.1f),
@@ -231,10 +223,6 @@ public class OptionScreen implements Screen{
 												Actions.addAction(Actions.alpha(1, 0.1f), vitesseBouton),
 												Actions.alpha(1, 0.1f),  
 												Actions.addAction(Actions.alpha(1, 0.1f), sonBouton),
-												Actions.delay(0.1f),
-												Actions.addAction(Actions.alpha(1, 0.1f), rateBouton),
-												Actions.delay(0.1f),
-												Actions.addAction(Actions.alpha(1, 0.1f), moreAppsBouton),
 												Actions.run(new Runnable() {
 										            @Override
 										            public void run() {
@@ -261,7 +249,6 @@ public class OptionScreen implements Screen{
 		
 		 //Utilisation du bouton BACK
 	        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
-	        	dispose();
 	        	game.setScreen(new MainMenuScreen(game));
 	        }
 	}
@@ -274,9 +261,13 @@ public class OptionScreen implements Screen{
 
 	@Override
 	public void show() {
+		game.ensureMenuMusic();
 		Gdx.input.setInputProcessor(stage);
 		Gdx.input.setCatchKey(Keys.BACK, true);
 		game.actionResolver.showBanner();
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 		if (listenersBound) {
 			return;
 		}
@@ -372,22 +363,6 @@ public class OptionScreen implements Screen{
 			}
 		});
 		
-		moreAppsBouton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y){
-		       	Gdx.net.openURI(GameConstants.GOOGLE_PLAY_STORE_URL);
-		        //Gdx.net.openURI(Variables.AMAZON_STORE_URL);
-			}
-		});
-		
-		rateBouton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y){
-		       	Gdx.net.openURI(GameConstants.GOOGLE_PLAY_GAME_URL);
-		       	//Gdx.net.openURI(Variables.AMAZON_GAME_URL);
-			}
-		});
-		
 		retourBouton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y){
@@ -396,7 +371,6 @@ public class OptionScreen implements Screen{
 															Actions.run(new Runnable() {
 													            @Override
 													            public void run() {
-													    			dispose();
 																	game.setScreen(new MainMenuScreen(game));
 													            }})));
 			}
@@ -466,8 +440,6 @@ public class OptionScreen implements Screen{
 	public void setLangage(){
 		langueBouton.setText(game.langue.langage); 
 		vitesseBouton.setText(game.langue.vitesse); 
-		rateBouton.setText(game.langue.noter);
-		moreAppsBouton.setText(game.langue.plusDApp);
 		sonBouton.setText(game.langue.sons); 
 		lentBouton.setText(game.langue.lent);
 		normalBouton.setText(game.langue.normal);

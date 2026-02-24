@@ -27,6 +27,7 @@ import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.MyGdxGame;
 import com.minimal.brick.breaker.free.GameConstants;
 import com.minimal.brick.breaker.free.screen.MainMenuScreen;
+import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class NiveauxScreen implements Screen{
 
@@ -191,6 +192,7 @@ public class NiveauxScreen implements Screen{
 		transitionImage.setX(-Gdx.graphics.getWidth());
 		transitionImage.setY(0);
 		transitionImage.addAction(Actions.alpha(0));
+		transitionImage.setTouchable(Touchable.disabled);
 		
 		imageNoire = new Image(skin.getDrawable("Barre"));
 		imageNoire.setWidth(Gdx.graphics.getWidth());
@@ -199,6 +201,7 @@ public class NiveauxScreen implements Screen{
 		imageNoire.setX(-Gdx.graphics.getWidth());
 		imageNoire.setY(0);
 		imageNoire.addAction(Actions.alpha(0));
+		imageNoire.setTouchable(Touchable.disabled);
 		
 		optionBloqueeBouton = new TextButton(game.langue.microGraviteBloquee, textButtonStyleSpecial);
 		optionBloqueeBouton.setX(-Gdx.graphics.getWidth());
@@ -278,7 +281,6 @@ public class NiveauxScreen implements Screen{
 	        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
 	        	  if(GameConstants.choixNiveau) GameConstants.choixNiveau = false;
 	        	  else {
-	        		  dispose();
 	        		  game.setScreen(new MainMenuScreen(game));
 	        	  }
 	        }
@@ -292,9 +294,13 @@ public class NiveauxScreen implements Screen{
 
 	@Override
 	public void show() {
+		game.ensureMenuMusic();
 		Gdx.input.setInputProcessor(stage);
 		Gdx.input.setCatchKey(Keys.BACK, true);
 		game.actionResolver.showBanner();
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 		updateBottomInsetLayout();
 		if (listenersBound) {
 			return;
@@ -329,7 +335,6 @@ public class NiveauxScreen implements Screen{
 																Actions.run(new Runnable() {
 														            @Override
 														            public void run() {
-														    			dispose();
 																		game.setScreen(new MainMenuScreen(game));
 														            }})));
 				}

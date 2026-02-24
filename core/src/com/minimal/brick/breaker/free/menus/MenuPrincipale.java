@@ -5,15 +5,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.MyGdxGame;
-import com.minimal.brick.breaker.free.GameConstants;
 import com.minimal.brick.breaker.free.screen.NiveauxScreen;
 import com.minimal.brick.breaker.free.screen.OptionScreen;
 
@@ -21,7 +20,7 @@ public class MenuPrincipale {
 
 	final MyGdxGame game;
 	private TextButtonStyle textButtonStyle;
-	private TextButton startBouton, optionBouton, rateBouton, moreAppsBouton;
+	private TextButton startBouton, optionBouton;
 	private Image transitionImage;
 	
 	public MenuPrincipale(final MyGdxGame gam, Skin skin, Stage stage, Color couleur){	
@@ -46,26 +45,6 @@ public class MenuPrincipale {
 		optionBouton.setX(startBouton.getX());
 		optionBouton.setY(startBouton.getY() - 1.1f*optionBouton.getHeight());
 		
-		rateBouton = new TextButton(gam.langue.noter, textButtonStyle);
-		rateBouton.setWidth(Gdx.graphics.getWidth()/3);
-		rateBouton.setHeight(Gdx.graphics.getHeight()/12);
-		rateBouton.setY(optionBouton.getY() - 1.1f*rateBouton.getHeight());
-		
-		moreAppsBouton = new TextButton(gam.langue.plusDApp, textButtonStyle);
-		moreAppsBouton.setWidth(Gdx.graphics.getWidth()/3);
-		moreAppsBouton.setHeight(Gdx.graphics.getHeight()/12);
-		moreAppsBouton.setY(optionBouton.getY() - 1.1f*rateBouton.getHeight());
-
-		if(!Donnees.getRate()){
-			rateBouton.setX(startBouton.getX());
-			moreAppsBouton.setX(-Gdx.graphics.getWidth());
-		}
-		else{
-			rateBouton.setX(-Gdx.graphics.getWidth());
-			moreAppsBouton.setX(startBouton.getX());
-		}
-		
-		
 		transitionImage = new Image(skin.getDrawable("Barre"));
 		transitionImage.setWidth(Gdx.graphics.getWidth());
 		transitionImage.setHeight(Gdx.graphics.getHeight());
@@ -73,21 +52,14 @@ public class MenuPrincipale {
 		transitionImage.setX(-Gdx.graphics.getWidth());
 		transitionImage.setY(0);
 		transitionImage.addAction(Actions.alpha(0));
+		transitionImage.setTouchable(Touchable.disabled);
 		
 		stage.addActor(startBouton);
 		stage.addActor(optionBouton);
-		stage.addActor(rateBouton);
-		stage.addActor(moreAppsBouton);
 		stage.addActor(transitionImage);
 
-		if(!Donnees.getRate()){
-			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), rateBouton)));
-			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), rateBouton)));
-		}
-		else{
-			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), moreAppsBouton)));
-			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), moreAppsBouton)));
-		}
+		startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton)));
+		startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton)));
 	}
 	
 	public void boutonListener(){
@@ -100,7 +72,6 @@ public class MenuPrincipale {
 															Actions.run(new Runnable() {
 													            @Override
 													            public void run() {
-													            	game.getScreen().dispose();
 																	game.setScreen(new NiveauxScreen(game));
 													            }})));
 			}
@@ -114,27 +85,8 @@ public class MenuPrincipale {
 															Actions.run(new Runnable() {
 													            @Override
 													            public void run() {
-													            	game.getScreen().dispose();
 																	game.setScreen(new OptionScreen(game));
 													            }})));
-			}
-		});
-		
-		rateBouton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y){
-				Donnees.setRate(true);
-		       	Gdx.net.openURI(GameConstants.GOOGLE_PLAY_GAME_URL);
-		       	//Gdx.net.openURI(Variables.AMAZON_GAME_URL);
-				
-			}
-		});
-		
-		moreAppsBouton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y){
-		       	Gdx.net.openURI(GameConstants.GOOGLE_PLAY_STORE_URL);
-		        //Gdx.net.openURI(Variables.AMAZON_STORE_URL);
 			}
 		});
 	}

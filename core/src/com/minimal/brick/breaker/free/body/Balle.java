@@ -52,7 +52,7 @@ public class Balle extends CircleShape{
 					break;
 		}
 		
-		maxSpeed = GameConstants.vitesseBalle * vitesseJeu * camera.viewportHeight;
+		maxSpeed = GameConstants.vitesseBalle * GameConstants.vitesseBalleScale * vitesseJeu * camera.viewportHeight;
 		
 		bodyDef = new BodyDef();
         this.setRadius(rayon);	
@@ -71,7 +71,7 @@ public class Balle extends CircleShape{
 	
 	public void active(){
 		//Limitation de la vitesse de la balle	
-		maxSpeed = GameConstants.vitesseBalle * vitesseJeu * camera.viewportHeight;	
+		maxSpeed = GameConstants.vitesseBalle * GameConstants.vitesseBalleScale * vitesseJeu * camera.viewportHeight;	
 		vectorSpeed = body.getLinearVelocity();		
 		body.setLinearVelocity(vectorSpeed.clamp(maxSpeed, maxSpeed));
 		
@@ -133,7 +133,7 @@ public class Balle extends CircleShape{
 	}
 	
 	public void setVitesse(float vitesseBalles){
-		maxSpeed = vitesseBalles * vitesseJeu * camera.viewportHeight;;
+		maxSpeed = vitesseBalles * GameConstants.vitesseBalleScale * vitesseJeu * camera.viewportHeight;;
 	}
 	
 	public static void detruire(Array<Balle> array, World world){

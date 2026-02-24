@@ -28,7 +28,6 @@ public class ActionBouton {
 				GameConstants.niveauSelectione = niveau;
 				try{
 					game.music.stop();
-					game.getScreen().dispose();
 					game.setScreen(new GameScreen(game));
 				}
 				catch(Exception e){
@@ -45,7 +44,6 @@ public class ActionBouton {
 				if(GameConstants.choixNiveau) 
 					GameConstants.choixNiveau = false;
 				else {
-					game.getScreen().dispose();
 					game.setScreen(new MainMenuScreen(game));
 				}
 			}

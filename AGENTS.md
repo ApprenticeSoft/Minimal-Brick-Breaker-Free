@@ -101,3 +101,28 @@ This file summarizes all major work completed to revive and optimize this Androi
 ## Current Status
 - Android revival work is implemented in source and tested via console + physical device deployment.
 - Project is ready for continued gameplay QA and store-readiness pass (signing/release policy/content checks).
+
+## HTML/Web Version (Raspberry Pi)
+- Added and maintained a dedicated `:html` module (GWT backend) for browser deployment.
+- Build/deploy workflow:
+  - Build: `./gradlew :html:dist`
+  - Deploy target on Pi: `/home/marc/apps/brick-breaker-web/`
+  - Deployed via `scp` sync to Pi host `192.168.68.65`.
+- Web layout and screen ratio:
+  - Final active layout: centered portrait game viewport with black side bars.
+  - Ratio set to standard phone portrait width (`9/16`) while filling browser height.
+  - Fixed persistent bottom gap on high-DPI displays by disabling fixed-size physical-pixel downscaling in GWT config.
+- Web font pipeline:
+  - Added build-time font atlas generation (`:html:generateWebFonts`) using free fonts:
+    - `Noto Sans` -> `Fonts/web_ui.fnt/png`
+    - `Bebas Neue` -> `Fonts/web_title.fnt/png`
+  - Web `LoadingScreen` maps game font keys to these atlases with linear filtering and non-integer glyph positioning for clean scaling.
+- Web typography updates:
+  - Button text increased and tuned multiple times; latest change applies an additional +20%.
+  - Title text increased and tuned multiple times; latest change applies an additional +20%.
+  - Added explicit text centering for button labels (horizontal and vertical) through recursive stage traversal of all `TextButton` actors in web screens.
+- Web gameplay/controls already applied:
+  - Removed visible pause button on web.
+  - Pause/resume toggles on `Esc`, `Space`, `P`.
+  - Web-only ball speed multiplier set to `1.5x`.
+  - Removed rate/new-game promo UI from web flow.

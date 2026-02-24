@@ -9,16 +9,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.MyGdxGame;
 import com.minimal.brick.breaker.free.GameConstants;
-import com.minimal.brick.breaker.free.menus.NewGameAd;
-import com.minimal.brick.breaker.free.menus.TableNotation;
 import com.minimal.brick.breaker.free.menus.MenuPrincipale;
+import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class MainMenuScreen implements Screen {
 
@@ -29,18 +27,14 @@ public class MainMenuScreen implements Screen {
 	private TextureAtlas textureAtlas;
 	private BitmapFont fontTitre;
 	private float titleWidth;
-	private TableNotation tableNotation;
 	private MenuPrincipale menuPrincipale;
-	private TextButtonStyle textButtonStyle;
-	private NewGameAd cosmonautAd;
 	private boolean listenersBound;
 	
 	public MainMenuScreen(final MyGdxGame gam){
 		game = gam;
 		listenersBound = false;
 	
-		if(!game.music.isPlaying())
-			game.music.play();
+		game.ensureMenuMusic();
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -55,42 +49,11 @@ public class MainMenuScreen implements Screen {
 		titleWidth = new GlyphLayout(fontTitre, "MINIMAL BRICK BREAKER").width;
 		
 		menuPrincipale = new MenuPrincipale(gam, skin, stage, new Color(0.27f, 0.695f, 0.613f, 1));
-		
-		if(!Donnees.getRate() && Donnees.getRateCount() < 1){
-			tableNotation = new TableNotation(game, skin);
-			tableNotation.draw(stage);
-		}	
-		
-		textButtonStyle = new TextButtonStyle();
-		textButtonStyle.up = skin.getDrawable("BoutonPatch");
-		textButtonStyle.down = skin.getDrawable("BoutonCheckedPatch");
-		textButtonStyle.font = game.assets.get("font1.ttf", BitmapFont.class);
-		textButtonStyle.fontColor = Color.WHITE;
-		textButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
-		
-		/*
-		 * TEST PUBLICITÉ NOUVEAU JEU
-		 */
-		if(!Donnees.getPromoteCosmonaut())
-			if(Donnees.getRateCount() < 2 || Donnees.getNiveau() > 3){
-				cosmonautAd = new NewGameAd(skin, "https://play.google.com/store/apps/details?id=com.cosmonaut.android");
-				LabelStyle labelStyle = new LabelStyle(game.assets.get("fontTextTableJeu.ttf", BitmapFont.class), Color.WHITE);
-				cosmonautAd.setLabelStyle(labelStyle);
-				cosmonautAd.setTextButtonStyle(textButtonStyle);
-				cosmonautAd.create(	skin.getDrawable("imageTable"),
-									"Images/CosmonautImage.png",
-									0.85f*Gdx.graphics.getWidth(), 
-									0.65f*Gdx.graphics.getHeight(), 
-									game.langue.nouveauJeu, 
-									game.langue.jouer);
-				cosmonautAd.setBackgroundColor(51/256f,77/256f,92/256f, 1); 
-				cosmonautAd.addToStage(stage);
-				cosmonautAd.action();
-			}
 	}
 	
 	@Override
 	public void render(float delta) {
+		game.ensureMenuMusic();
 		Gdx.gl.glClearColor(0.27f, 0.695f, 0.613f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	
@@ -117,14 +80,20 @@ public class MainMenuScreen implements Screen {
 	public void show() {
 		Gdx.input.setInputProcessor(stage);
 		game.actionResolver.showBanner();
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
+		stage.addCaptureListener(new InputListener() {
+			@Override
+			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+				game.ensureMenuMusic();
+				return false;
+			}
+		});
 		if (listenersBound) {
 			return;
 		}
 		listenersBound = true;
-		
-		if(!Donnees.getRate() && Donnees.getRateCount() < 1){
-			tableNotation.action();
-		}
 
 		menuPrincipale.boutonListener();
 	}
@@ -149,9 +118,6 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void dispose() {
-		if (cosmonautAd != null) {
-			cosmonautAd.dispose();
-		}
 		skin.dispose();
 		stage.dispose();
 	}

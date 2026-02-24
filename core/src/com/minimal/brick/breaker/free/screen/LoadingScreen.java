@@ -71,13 +71,16 @@ public class LoadingScreen implements Screen{
 		FileHandleResolver resolver = new InternalFileHandleResolver();
 		game.assets.setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(resolver));
 		game.assets.setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(resolver));
+		boolean isWebBuild = Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL;
+		float webButtonFontScale = isWebBuild ? 2f : 1f;
+		float webTitleFontScale = isWebBuild ? 2.5f : 1f;
 		
 		FreeTypeFontLoaderParameter size1Params = new FreeTypeFontLoaderParameter();
 		size1Params.fontFileName = "Fonts/calibri.ttf";			
 		size1Params.fontParameters.genMipMaps = true;					
 		size1Params.fontParameters.minFilter = TextureFilter.Linear;
 		size1Params.fontParameters.magFilter = TextureFilter.Linear;						
-		size1Params.fontParameters.size = Gdx.graphics.getWidth()/18;
+		size1Params.fontParameters.size = Math.max(1, Math.round((Gdx.graphics.getWidth()/18f) * webButtonFontScale));
 		game.assets.load("font1.ttf", BitmapFont.class, size1Params);
 		
 		FreeTypeFontLoaderParameter size2Params = new FreeTypeFontLoaderParameter();
@@ -85,7 +88,7 @@ public class LoadingScreen implements Screen{
 		size2Params.fontParameters.genMipMaps = true;					
 		size2Params.fontParameters.minFilter = TextureFilter.Linear;
 		size2Params.fontParameters.magFilter = TextureFilter.Linear;						
-		size2Params.fontParameters.size = Gdx.graphics.getWidth()/22;
+		size2Params.fontParameters.size = Math.max(1, Math.round((Gdx.graphics.getWidth()/22f) * webButtonFontScale));
 		game.assets.load("fontOption.ttf", BitmapFont.class, size2Params);
 		
 		FreeTypeFontLoaderParameter size3Params = new FreeTypeFontLoaderParameter();
@@ -93,7 +96,7 @@ public class LoadingScreen implements Screen{
 		size3Params.fontParameters.genMipMaps = true;					
 		size3Params.fontParameters.minFilter = TextureFilter.Linear;
 		size3Params.fontParameters.magFilter = TextureFilter.Linear;						
-		size3Params.fontParameters.size = Gdx.graphics.getWidth()/11;
+		size3Params.fontParameters.size = Math.max(1, Math.round((Gdx.graphics.getWidth()/11f) * webTitleFontScale));
 		game.assets.load("fontTitre.ttf", BitmapFont.class, size3Params);
 		
 		FreeTypeFontLoaderParameter size4Params = new FreeTypeFontLoaderParameter();
@@ -101,7 +104,7 @@ public class LoadingScreen implements Screen{
 		size4Params.fontParameters.genMipMaps = true;					
 		size4Params.fontParameters.minFilter = TextureFilter.Linear;
 		size4Params.fontParameters.magFilter = TextureFilter.Linear;						
-		size4Params.fontParameters.size = Gdx.graphics.getWidth()/23;
+		size4Params.fontParameters.size = Math.max(1, Math.round((Gdx.graphics.getWidth()/23f) * webButtonFontScale));
 		game.assets.load("fontBoutonNotation.ttf", BitmapFont.class, size4Params);
 		
 		FreeTypeFontLoaderParameter size5Params = new FreeTypeFontLoaderParameter();

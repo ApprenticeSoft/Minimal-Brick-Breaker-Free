@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Minimal-Brick-Breaker-Free"
-include ":android", ":core"
+include ":android", ":core", ":html"

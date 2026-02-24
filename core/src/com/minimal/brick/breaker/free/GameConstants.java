@@ -40,6 +40,7 @@ public class GameConstants {
 	public static float vitesseBalleNormale = 0.5f;
 	public static float vitesseBalleMax = 0.75f;
 	public static float vitesseBalle = vitesseBalleNormale;
+	public static float vitesseBalleScale = 1f;
 	public static long vitesseBalleTime;
 	//Gestion du bouclier
 	public static boolean bouclierActif = false;

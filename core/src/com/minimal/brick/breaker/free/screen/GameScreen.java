@@ -52,6 +52,7 @@ import com.minimal.brick.breaker.free.body.Bouclier;
 import com.minimal.brick.breaker.free.body.Brique;
 import com.minimal.brick.breaker.free.body.Laser;
 import com.minimal.brick.breaker.free.body.Objets;
+import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class GameScreen extends InputAdapter implements Screen{
 
@@ -102,6 +103,8 @@ public class GameScreen extends InputAdapter implements Screen{
 	private boolean adBreakSent;
 	private boolean bannerVisible;
 	private boolean listenersBound;
+	private final boolean webBuild;
+	private final boolean showPauseButton;
 	
 	Box2DDebugRenderer debugRenderer; 
 	
@@ -110,6 +113,8 @@ public class GameScreen extends InputAdapter implements Screen{
 		adBreakSent = false;
 		bannerVisible = false;
 		listenersBound = false;
+		webBuild = Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL;
+		showPauseButton = !webBuild;
 		couleurEdit = GameConstants.groupeSelectione;
 		appliedColorGroup = -1;
 		if(GameConstants.epileptique){
@@ -122,6 +127,7 @@ public class GameScreen extends InputAdapter implements Screen{
 		}
 		couleurs = new Couleurs(couleurEdit);
 		sons = new Sons(game, GameConstants.groupeSelectione);
+		GameConstants.vitesseBalleScale = webBuild ? 1.5f : 1f;
 		GameConstants.vitesseBalle = GameConstants.vitesseBalleNormale;
 		GameConstants.ecart = GameConstants.barreNormale;
 		GameConstants.bouclierActif = false;
@@ -229,10 +235,12 @@ public class GameScreen extends InputAdapter implements Screen{
 			restartBouton = new TextButton(gam.langue.recommencer, textButtonStyle);	
 			menuBouton = new TextButton(gam.langue.menu, textButtonStyle);
 			quitBouton = new TextButton(gam.langue.quitter, textButtonStyle);
-			pauseBouton = new TextButton("II", pauseButtonStyle);
-			pauseBouton.setWidth((Gdx.graphics.getWidth()/16f) * 1.3f);
-			pauseBouton.setHeight(pauseBouton.getWidth());
-			updatePauseButtonBounds();
+			if (showPauseButton) {
+				pauseBouton = new TextButton("II", pauseButtonStyle);
+				pauseBouton.setWidth((Gdx.graphics.getWidth()/16f) * 1.3f);
+				pauseBouton.setHeight(pauseBouton.getWidth());
+				updatePauseButtonBounds();
+			}
 		
 		tablePause = new Table();
 		float restartTextWidth = new GlyphLayout(game.assets.get("font1.ttf", BitmapFont.class), gam.langue.recommencer).width;
@@ -321,7 +329,9 @@ public class GameScreen extends InputAdapter implements Screen{
 		stage.addActor(jeuFini);
 		stage.addActor(micrograviteDebloque);
 		stage.addActor(epileptiqueDebloque);
-		stage.addActor(pauseBouton);
+		if (pauseBouton != null) {
+			stage.addActor(pauseBouton);
+		}
 		tableFin.setVisible(false);
 
         debugRenderer = new Box2DDebugRenderer();
@@ -420,12 +430,14 @@ public class GameScreen extends InputAdapter implements Screen{
 			}
 		}
 
-		pauseBouton.setVisible(canTogglePause());
+		if (pauseBouton != null) {
+			pauseBouton.setVisible(canTogglePause());
+		}
 		
         world.step(GameConstants.BOX_STEP, GameConstants.BOX_VELOCITY_ITERATIONS, GameConstants.BOX_POSITION_ITERATIONS);
         
         // Mettre le jeu en pause
-        if (Gdx.input.isKeyJustPressed(Keys.BACK) && canTogglePause()){
+        if (isPauseTogglePressed() && canTogglePause()){
 			togglePause();
 		}
         
@@ -540,9 +552,17 @@ public class GameScreen extends InputAdapter implements Screen{
 	public void show() {	
 		// Important pour pouvoir utiliser la touche BACK
 		Gdx.input.setCatchKey(Keys.BACK, true);
+		if (webBuild) {
+			Gdx.input.setCatchKey(Keys.ESCAPE, true);
+			Gdx.input.setCatchKey(Keys.SPACE, true);
+			Gdx.input.setCatchKey(Keys.P, true);
+		}
 		// Permet d'interagir avec les Actors du Stage
 		Gdx.input.setInputProcessor(stage);
 		game.actionResolver.hideBanner();
+		if (webBuild) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 		if (listenersBound) {
 			return;
 		}
@@ -814,14 +834,16 @@ public class GameScreen extends InputAdapter implements Screen{
 			}
 		});
 
-		pauseBouton.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				if (canTogglePause()) {
-					togglePause();
+		if (pauseBouton != null) {
+			pauseBouton.addListener(new ClickListener() {
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					if (canTogglePause()) {
+						togglePause();
+					}
 				}
-			}
-		});
+			});
+		}
 		
 		quitBouton.addListener(new ClickListener(){
 			@Override
@@ -960,6 +982,15 @@ public class GameScreen extends InputAdapter implements Screen{
 			imagePause.addAction(Actions.alpha(0.75f, 0.25f));
 			tablePause.addAction(Actions.moveTo(Gdx.graphics.getWidth()/2 - tablePause.getWidth()/2, tablePause.getY(), 0.25f));
 		}
+	}
+
+	private boolean isPauseTogglePressed() {
+		if (webBuild) {
+			return Gdx.input.isKeyJustPressed(Keys.ESCAPE)
+					|| Gdx.input.isKeyJustPressed(Keys.SPACE)
+					|| Gdx.input.isKeyJustPressed(Keys.P);
+		}
+		return Gdx.input.isKeyJustPressed(Keys.BACK);
 	}
 
 	private void updatePauseButtonBounds() {
