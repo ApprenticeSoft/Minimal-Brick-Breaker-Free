@@ -1,315 +1,259 @@
 package com.minimal.brick.breaker.free.android;
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.WindowMetrics;
 import android.widget.FrameLayout;
-import android.widget.FrameLayout.LayoutParams;
-import android.widget.RelativeLayout;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
-import com.minimal.brick.breaker.android.util.IabHelper;
-import com.minimal.brick.breaker.android.util.IabResult;
-import com.minimal.brick.breaker.android.util.Inventory;
-import com.minimal.brick.breaker.android.util.Purchase;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.minimal.brick.breaker.free.ActionResolver;
 import com.minimal.brick.breaker.free.MyGdxGame;
 
-public class AndroidLauncher extends AndroidApplication implements ActionResolver{
+public class AndroidLauncher extends AndroidApplication implements ActionResolver {
 
-	IabHelper mHelper;
-    boolean mAdsRemoved = false;
-	
-	FrameLayout fLayout;
-	AdView admobView, adView;
-	protected View gameView;
-	private InterstitialAd interstitialAd;
-	ConnectivityManager connManager;
-    private NetworkInfo info;
-	
-	private static final String BANNER_ID = "ca-app-pub-7775582829834874/3718178741";
-	private static final String INTERSTITIAL_ID = "ca-app-pub-7775582829834874/5194911941";
-	
-	@Override
-	protected void onCreate (Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+    private static final String PROD_BANNER_ID = "ca-app-pub-7775582829834874/3718178741";
+    private static final String PROD_INTERSTITIAL_ID = "ca-app-pub-7775582829834874/5194911941";
+    private static final String TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
+    private static final String TEST_INTERSTITIAL_ID = "ca-app-pub-3940256099942544/1033173712";
 
-		String base64EncodedPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiz4xCldQgOS85WyJviHCfDEHvHILfBmBHViwwxmMx3sWOgnVXElWg8ZEsFp4ZgkhPcRb3ZqA6+xlDI4L0oY2L0+L95KuYFy5D45qVrllI7aDCro6hHG0/MmXaYGMU9VDzeohPpoW01LnUzcJ32Onr8JNT9wEnzxpH6YRhoF5JEhUgYRPR19nkvUx2bH1mWa2yQMBsU7cCAoG5AwMAsz1fRWJdDmDs6RJTu2g3hzVD1ueBIspeck4BxSLdKu5N1+PG0ZNlfnZ0b1XIHlBxt3fBLFRAW5qZlmBV/kuGmQoEkZiy9uKpc8124UFNehFYxulN0jKefYQ7PxcteaeDT9VFwIDAQAB";
-		
-		/******************************GOOGLE BILLING******************************/
-		// compute your public key and store it in base64EncodedPublicKey
-		mHelper = new IabHelper(this, base64EncodedPublicKey);
-		
-		mHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-			   public void onIabSetupFinished(IabResult result) {
-			      if (!result.isSuccess()) {
-			         // Oh noes, there was a problem.
-			         Log.d("IAB", "Problem setting up In-app Billing: " + result);
-			      }
-			      // Hooray, IAB is fully set up!
-			      Log.d("IAB", "Billing Success: " + result);
-			      
-			      processPurchases();
-			   }
-			});
-		/**************************************************************************/
-		
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);    
-		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+    private static final int INTERSTITIAL_EVERY_BREAKS = 2;
+    private static final long MIN_INTERSTITIAL_INTERVAL_MS = 60000L;
 
-		fLayout = new FrameLayout(this);
-		FrameLayout.LayoutParams fParams = 
-		new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-		                			FrameLayout.LayoutParams.MATCH_PARENT);
-		fLayout.setLayoutParams(fParams);
-		
-		admobView = createAdView();
-		View gameView = createGameView(config);
+    private FrameLayout rootLayout;
+    private AdView bannerView;
+    private InterstitialAd interstitialAd;
+    private boolean interstitialLoading;
+    private int lastBannerWidthDp = -1;
 
-		fLayout.addView(gameView);
-		fLayout.addView(admobView);
-		setContentView(fLayout);
-		startAdvertising(admobView);
-		
-		interstitialAd = new InterstitialAd(this);
-		interstitialAd.setAdUnitId(INTERSTITIAL_ID);
-		interstitialAd.setAdListener(new AdListener() {
-			@Override
-			public void onAdLoaded() {
-			}
-			@Override
-			public void onAdClosed() {
-			}
-		});
-		showOrLoadInterstital();
-		
-		connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		info = connManager.getActiveNetworkInfo();
+    private int breaksSinceInterstitial;
+    private long lastInterstitialShownAtMs;
 
-	}
-	
-	private AdView createAdView() {
-		adView = new AdView(this);
-		adView.setAdSize(AdSize.SMART_BANNER);
-		adView.setAdUnitId(BANNER_ID);
-		adView.setId(12345); // this is an arbitrary id, allows for relative positioning in createGameView()
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		params.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
-			params.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-			adView.setLayoutParams(params);
-			//adView.setBackgroundColor(Color.BLACK);
-			return adView;
-	}
-	
-	private View createGameView(AndroidApplicationConfiguration config) {
-		gameView = initializeForView(new MyGdxGame(this), config);
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-			params.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-			params.addRule(RelativeLayout.BELOW, adView.getId());
-			gameView.setLayoutParams(params);
-			return gameView;
-	}
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-	public void startAdvertising(AdView adView) {
-		AdRequest adRequest = new AdRequest.Builder().build();
-		adView.loadAd(adRequest);
-	}
-	
-	public void showOrLoadInterstital() {
-		try {
-			runOnUiThread(new Runnable() {
-				public void run() {
-					if (info != null && info.isConnected()){
-						if (interstitialAd.isLoaded()) {
-							interstitialAd.show();
-	
-						} else {
-							AdRequest interstitialRequest = new AdRequest.Builder().build();
-							interstitialAd.loadAd(interstitialRequest);
-						}
-					}
-				}
-			});
-		} catch (Exception e) {
-		}
-	 }
-	
-	public void LoadInterstital() {
-			try {
-				runOnUiThread(new Runnable() {
-					public void run() {
-						if (info != null && info.isConnected()){
-							if (!interstitialAd.isLoaded()) {
-								AdRequest interstitialRequest = new AdRequest.Builder().addTestDevice("1E55D4A762FAE18E36A0BC83CBF3FA2B").build();
-								interstitialAd.loadAd(interstitialRequest);
-							}
-						}
-					}
-				});
-			} catch (Exception e) {
-			}
-	}
-	
-	public void showAdsBottom() {
-        runOnUiThread(new Runnable() {
-                @Override
-                public void run() {               	  
-              	  if (info != null && info.isConnected()){
-              		  adView.setVisibility(View.VISIBLE); 	
-                  	  
-                  	  adView.setLayoutParams(new FrameLayout.LayoutParams(
-                                FrameLayout.LayoutParams.MATCH_PARENT, 
-                                FrameLayout.LayoutParams.WRAP_CONTENT, 
-                                Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM));
-                     }
-                }
-        	});
-	  }
+        AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+        config.useImmersiveMode = true;
+        config.useAccelerometer = false;
+        config.useCompass = false;
 
-	  public void showAdsTop() {
-        runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-              	  if (info != null && info.isConnected()){
-	                	  adView.setVisibility(View.VISIBLE);
-	                	  
-	                	  adView.setLayoutParams(new FrameLayout.LayoutParams(
-	                              FrameLayout.LayoutParams.MATCH_PARENT, 
-	                              FrameLayout.LayoutParams.WRAP_CONTENT, 
-	                              Gravity.CENTER_HORIZONTAL | Gravity.TOP));
-              	  }
-                }
-        	});
-	  }
-	  
-	  public void hideAds() {
-	          runOnUiThread(new Runnable() {
-	                  @Override
-	                  public void run() {
-	                	  if (info != null && info.isConnected()){
-	                		  adView.setVisibility(View.GONE);
-	                	  } 
-	                  }
-	          });
-	  }
-	  
-	  public int hauteurBanniere(){
-		  if (info != null && info.isConnected()){
-			  return adView.getHeight();
-		  }
-		  else return 0;		  
-	  }
-		
-		public void removeAds(){
-			System.out.println("TEST1 removeAds() = ");
-			 mHelper.launchPurchaseFlow(this, SKU_REMOVE_ADS, RC_REQUEST,
-				     mPurchaseFinishedListener, "HANDLE_PAYLOADS");
-		}
-		
-		public boolean adsListener(){
-			return mAdsRemoved;
-		}
-		
-		// Callback for when a purchase is finished
-	    IabHelper.OnIabPurchaseFinishedListener mPurchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener() {
-	        public void onIabPurchaseFinished(IabResult result, Purchase purchase) {
-				System.out.println("TEST2 removeAds() = ");
-	            if ( purchase == null) return;
-	            Log.d("IAB", "Purchase finished: " + result + ", purchase: " + purchase);
-				System.out.println("TEST3 removeAds() = ");
+        View gameView = initializeForView(new MyGdxGame(this), config);
 
-	            // if we were disposed of in the meantime, quit.
-	            if (mHelper == null) return;
+        rootLayout = new FrameLayout(this);
+        rootLayout.setLayoutParams(new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        rootLayout.addView(gameView);
 
-	            if (result.isFailure()) {
-	    			System.out.println("TEST4 removeAds() = ");
-	                //complain("Error purchasing: " + result);
-	                //setWaitScreen(false);
-	                return;
-	            }
-//	            if (!verifyDeveloperPayload(purchase)) {
-//	                //complain("Error purchasing. Authenticity verification failed.");
-//	                //setWaitScreen(false);
-//	                return;
-//	            }
+        MobileAds.initialize(this, ignored -> { });
+        setupAdaptiveBanner();
+        preloadInterstitial();
 
-				System.out.println("TEST5 removeAds() = ");
-	            Log.d("IAB", "Purchase successful.");
+        setContentView(rootLayout);
+    }
 
-	            if (purchase.getSku().equals(SKU_REMOVE_ADS)) {
-	                // bought the premium upgrade!
-	    			System.out.println("TEST6 removeAds() = ");
-	                Log.d("IAB", "Purchase is premium upgrade. Congratulating user.");
+    @Override
+    protected void onDestroy() {
+        if (bannerView != null) {
+            bannerView.destroy();
+            bannerView = null;
+        }
+        interstitialAd = null;
+        super.onDestroy();
+    }
 
-	                // Do what you want here maybe call your game to do some update
-	                //
-	            	// Maybe set a flag to indicate that ads shouldn't show anymore
-	                mAdsRemoved = true;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (bannerView != null) {
+            bannerView.resume();
+        }
+        refreshBannerSize(false);
+    }
 
-	            }
-				System.out.println("TEST7 removeAds() = ");
-	        }
-	    };
+    @Override
+    protected void onPause() {
+        if (bannerView != null) {
+            bannerView.pause();
+        }
+        super.onPause();
+    }
 
-		public void processPurchases(){
-			mHelper.queryInventoryAsync(mGotInventoryListener);
-		}
-		
-		// Listener that's called when we finish querying the items and subscriptions we own
-		IabHelper.QueryInventoryFinishedListener mGotInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
-		    public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
-		        Log.d("IAB", "Query inventory finished.");
+    private void setupAdaptiveBanner() {
+        bannerView = new AdView(this);
+        bannerView.setAdUnitId(getBannerUnitId());
+        bannerView.setVisibility(View.GONE);
+        FrameLayout.LayoutParams bannerParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        bannerParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        rootLayout.addView(bannerView, bannerParams);
 
-		        // Have we been disposed of in the meantime? If so, quit.
-		        if (mHelper == null) return;
+        // Keep adaptive width in sync with split-screen/foldables/window size changes.
+        rootLayout.addOnLayoutChangeListener((view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            if ((right - left) != (oldRight - oldLeft)) {
+                refreshBannerSize(false);
+            }
+        });
 
-		        // Is it a failure?
-		        if (result.isFailure()) {
-		            // handle failure here
-		            return;
-		        }
+        refreshBannerSize(true);
+    }
 
-		        // Do we have the premium upgrade?
-		        Purchase removeAdPurchase = inventory.getPurchase(SKU_REMOVE_ADS);
-		        mAdsRemoved = (removeAdPurchase != null);
-		        System.out.println("TEST5 mAdsRemoved = " + mAdsRemoved + "*****************");
-		        System.out.println("TEST6 removeAdPurchase = " + removeAdPurchase + "*****************");
-		        //System.out.println("inventory.getSkuDetails(SKU_REMOVE_ADS).getPrice() = " + inventory.getSkuDetails(SKU_REMOVE_ADS).getPrice() + "*****************");
-		    }
-		};
-		
-		@Override
-		public void onActivityResult(int request, int response, Intent data) {
-		    super.onActivityResult(request, response, data);
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        refreshBannerSize(false);
+    }
 
-		    if (mHelper != null) {
-		        // Pass on the activity result to the helper for handling
-		        if (mHelper.handleActivityResult(request, response, data)) {
-		            Log.d("IAB", "onActivityResult handled by IABUtil.");
-		        }
-		    }
-		}
-		
-		@Override
-		public void onDestroy() {
-		   super.onDestroy();
-		   if (mHelper != null) mHelper.dispose();
-		   mHelper = null;
-		}
+    private void refreshBannerSize(boolean forceReload) {
+        if (bannerView == null) {
+            return;
+        }
+        int adWidthDp = getAdaptiveBannerWidthDp();
+        if (adWidthDp <= 0) {
+            return;
+        }
+        boolean widthChanged = adWidthDp != lastBannerWidthDp;
+        if (!forceReload && !widthChanged && bannerView.getAdSize() != null) {
+            return;
+        }
+        lastBannerWidthDp = adWidthDp;
+        bannerView.setAdSize(getAdaptiveBannerSize(adWidthDp));
+        bannerView.loadAd(new AdRequest.Builder().build());
+    }
+
+    private int getAdaptiveBannerWidthDp() {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int adWidthPixels = rootLayout != null ? rootLayout.getWidth() : 0;
+        if (adWidthPixels <= 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+            adWidthPixels = windowMetrics.getBounds().width();
+        } else if (adWidthPixels <= 0) {
+            adWidthPixels = metrics.widthPixels;
+        }
+        return Math.max(1, Math.round(adWidthPixels / metrics.density));
+    }
+
+    private AdSize getAdaptiveBannerSize(int adWidthDp) {
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidthDp);
+    }
+
+    private String getBannerUnitId() {
+        return isDebugBuild() ? TEST_BANNER_ID : PROD_BANNER_ID;
+    }
+
+    private String getInterstitialUnitId() {
+        return isDebugBuild() ? TEST_INTERSTITIAL_ID : PROD_INTERSTITIAL_ID;
+    }
+
+    private boolean isDebugBuild() {
+        return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+    }
+
+    @Override
+    public void preloadInterstitial() {
+        runOnUiThread(() -> {
+            if (interstitialLoading || interstitialAd != null) {
+                return;
+            }
+            interstitialLoading = true;
+            InterstitialAd.load(
+                    this,
+                    getInterstitialUnitId(),
+                    new AdRequest.Builder().build(),
+                    new InterstitialAdLoadCallback() {
+                        @Override
+                        public void onAdLoaded(InterstitialAd ad) {
+                            interstitialLoading = false;
+                            interstitialAd = ad;
+                            ad.setFullScreenContentCallback(new FullScreenContentCallback() {
+                                @Override
+                                public void onAdShowedFullScreenContent() {
+                                    lastInterstitialShownAtMs = SystemClock.elapsedRealtime();
+                                    breaksSinceInterstitial = 0;
+                                    interstitialAd = null;
+                                    hideBanner();
+                                }
+
+                                @Override
+                                public void onAdDismissedFullScreenContent() {
+                                    showBanner();
+                                    preloadInterstitial();
+                                }
+
+                                @Override
+                                public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
+                                    interstitialAd = null;
+                                    showBanner();
+                                    preloadInterstitial();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onAdFailedToLoad(LoadAdError loadAdError) {
+                            interstitialLoading = false;
+                            interstitialAd = null;
+                        }
+                    }
+            );
+        });
+    }
+
+    @Override
+    public void onNaturalBreak() {
+        runOnUiThread(() -> {
+            breaksSinceInterstitial++;
+            long now = SystemClock.elapsedRealtime();
+            boolean cooldownDone = now - lastInterstitialShownAtMs >= MIN_INTERSTITIAL_INTERVAL_MS;
+            boolean eligible = breaksSinceInterstitial >= INTERSTITIAL_EVERY_BREAKS && cooldownDone;
+
+            if (eligible && interstitialAd != null) {
+                interstitialAd.show(this);
+            } else {
+                preloadInterstitial();
+            }
+        });
+    }
+
+    @Override
+    public void showBanner() {
+        runOnUiThread(() -> {
+            refreshBannerSize(false);
+            if (bannerView != null && bannerView.getVisibility() != View.VISIBLE) {
+                bannerView.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    @Override
+    public void hideBanner() {
+        runOnUiThread(() -> {
+            if (bannerView != null && bannerView.getVisibility() != View.GONE) {
+                bannerView.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    @Override
+    public int getBannerHeightPx() {
+        return bannerView == null ? 0 : bannerView.getHeight();
+    }
 }

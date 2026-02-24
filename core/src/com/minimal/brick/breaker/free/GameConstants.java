@@ -16,8 +16,7 @@ public class GameConstants {
 	public static boolean choixNiveau = false;
 	public static boolean niveauFini = true;
 	public static boolean pause = false;
-	public static int INTERSTITIAL_TRIGGER = 2;
-	//Propriétés spéciales
+	//PropriÃ©tÃ©s spÃ©ciales
 	public static boolean microgravite = false;
 	public static boolean epileptique = false;
 	//Option vitesse jeu
@@ -37,9 +36,9 @@ public class GameConstants {
 	public static float barreMax = 0.8f;
 	public static float ecart = barreNormale;
 	//Objet modification vitesse balle
-	public static float vitesseBalleMin = 0.5f;
-	public static float vitesseBalleNormale = 1.0f;
-	public static float vitesseBalleMax = 1.5f;
+	public static float vitesseBalleMin = 0.25f;
+	public static float vitesseBalleNormale = 0.5f;
+	public static float vitesseBalleMax = 0.75f;
 	public static float vitesseBalle = vitesseBalleNormale;
 	public static long vitesseBalleTime;
 	//Gestion du bouclier
@@ -48,7 +47,7 @@ public class GameConstants {
 	public static boolean laserActif = false;
 	public static long laserTime;
 	public static int tirs = 0;
-	//Nombre de vies usées
+	//Nombre de vies usÃ©es
 	public static int viesPerdues;
 	
 	//Liens vers les App Store

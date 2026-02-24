@@ -27,8 +27,10 @@ public class NewGameAd {
 	public TextButtonStyle textButtonStyle;
 	public TextButton playButton;
 	public Button closeButton;
+	private Texture textureLogo;
 	private Skin skin;
 	private String playStoreLink;
+	private boolean listenersAttached;
 	
 	public NewGameAd(Skin skin, String playStoreLink){
 		this.skin = skin;
@@ -55,7 +57,7 @@ public class NewGameAd {
 		playButton.setY(backgroundImage.getY() + 0.2f*backgroundImage.getHeight() - 0.5f * playButton.getHeight());
 		playButton.getLabel().scaleBy(5.5f);
 		
-		Texture textureLogo = new Texture(Gdx.files.internal(gameImagePath), false);
+		textureLogo = new Texture(Gdx.files.internal(gameImagePath), false);
 		textureLogo.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		gameImage = new Image(textureLogo);
 		gameImage.setWidth(0.92f * backgroundImage.getWidth());
@@ -99,6 +101,11 @@ public class NewGameAd {
 	}
 	
 	public void action(){
+		if (listenersAttached) {
+			return;
+		}
+		listenersAttached = true;
+
 		closeButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y){
@@ -158,6 +165,13 @@ public class NewGameAd {
 		       	
 		       	Donnees.setPromoteCosmonaut(true);
 			}
-		});
+			});
+	}
+
+	public void dispose() {
+		if (textureLogo != null) {
+			textureLogo.dispose();
+			textureLogo = null;
+		}
 	}
 }

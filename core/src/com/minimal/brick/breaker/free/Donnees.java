@@ -38,10 +38,6 @@ public static Preferences prefs;
 		    prefs.putBoolean("Epileptique", false);
 		}
 		
-		if (!prefs.contains("INTERSTITIAL_TRIGGER")) {
-		    prefs.putInteger("INTERSTITIAL_TRIGGER", 1);
-		}
-		
 		if (!prefs.contains("RateCount")) {
 		    prefs.putInteger("RateCount", 2);
 		}
@@ -57,7 +53,7 @@ public static Preferences prefs;
 	
 	public static void setNiveau(int val) {
 	    prefs.putInteger("Niveau", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static int getNiveau() {
@@ -66,7 +62,7 @@ public static Preferences prefs;
 	
 	public static void setGroupe(int val) {
 	    prefs.putInteger("Groupe", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static int getGroupe() {
@@ -75,7 +71,7 @@ public static Preferences prefs;
 	
 	public static void setVitesse(int val) {
 	    prefs.putInteger("Vitesse", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static int getVitesse() {
@@ -84,7 +80,7 @@ public static Preferences prefs;
 	
 	public static void setLangue(int val) {
 	    prefs.putInteger("Langue", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static int getLangue() {
@@ -93,7 +89,7 @@ public static Preferences prefs;
 	
 	public static void setSon(boolean val) {
 	    prefs.putBoolean("Son", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static boolean getSon() {
@@ -102,7 +98,7 @@ public static Preferences prefs;
 	
 	public static void setMicrogravite(boolean val) {
 	    prefs.putBoolean("Microgravite", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static boolean getMicrogravite() {
@@ -111,25 +107,16 @@ public static Preferences prefs;
 	
 	public static void setEpileptique(boolean val) {
 	    prefs.putBoolean("Epileptique", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static boolean getEpileptique() {
 	    return prefs.getBoolean("Epileptique");
 	}
 	
-	public static void setInterstitial(int val) {
-	    prefs.putInteger("INTERSTITIAL_TRIGGER", val);
-	    prefs.flush();							//Sert à sauvegarder
-	}
-
-	public static int getInterstitial() {
-	    return prefs.getInteger("INTERSTITIAL_TRIGGER");
-	}
-	
 	public static void setRateCount(int val) {
 	    prefs.putInteger("RateCount", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static int getRateCount() {
@@ -138,7 +125,7 @@ public static Preferences prefs;
 	
 	public static void setRate(boolean val) {
 	    prefs.putBoolean("Rate", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static boolean getRate() {
@@ -147,7 +134,7 @@ public static Preferences prefs;
 	
 	public static void setPromoteCosmonaut(boolean val) {
 	    prefs.putBoolean("PROMOTE_COSMONAUT", val);
-	    prefs.flush();							//Sert à sauvegarder
+	    prefs.flush();							//Sert Ã  sauvegarder
 	}
 
 	public static boolean getPromoteCosmonaut() {

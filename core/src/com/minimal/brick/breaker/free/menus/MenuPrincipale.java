@@ -21,7 +21,7 @@ public class MenuPrincipale {
 
 	final MyGdxGame game;
 	private TextButtonStyle textButtonStyle;
-	private TextButton startBouton, optionBouton, rateBouton, removeAdsBouton, moreAppsBouton;
+	private TextButton startBouton, optionBouton, rateBouton, moreAppsBouton;
 	private Image transitionImage;
 	
 	public MenuPrincipale(final MyGdxGame gam, Skin skin, Stage stage, Color couleur){	
@@ -66,16 +66,6 @@ public class MenuPrincipale {
 		}
 		
 		
-		removeAdsBouton = new TextButton(gam.langue.removeAds, textButtonStyle);
-		removeAdsBouton.setWidth(Gdx.graphics.getWidth()/3);
-		removeAdsBouton.setHeight(Gdx.graphics.getHeight()/11);
-		if(!game.actionResolver.adsListener())
-			removeAdsBouton.setX(startBouton.getX());	
-		else 
-			removeAdsBouton.setX(-Gdx.graphics.getWidth());
-		
-		removeAdsBouton.setY(rateBouton.getY() - 1.1f*removeAdsBouton.getHeight());
-		
 		transitionImage = new Image(skin.getDrawable("Barre"));
 		transitionImage.setWidth(Gdx.graphics.getWidth());
 		transitionImage.setHeight(Gdx.graphics.getHeight());
@@ -88,16 +78,15 @@ public class MenuPrincipale {
 		stage.addActor(optionBouton);
 		stage.addActor(rateBouton);
 		stage.addActor(moreAppsBouton);
-		stage.addActor(removeAdsBouton);
 		stage.addActor(transitionImage);
 
 		if(!Donnees.getRate()){
-			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), rateBouton), Actions.addAction(Actions.alpha(0), removeAdsBouton)));
-			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), rateBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), removeAdsBouton)));
+			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), rateBouton)));
+			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), rateBouton)));
 		}
 		else{
-			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), moreAppsBouton), Actions.addAction(Actions.alpha(0), removeAdsBouton)));
-			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), moreAppsBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), removeAdsBouton)));
+			startBouton.addAction(Actions.parallel(Actions.alpha(0), Actions.addAction(Actions.alpha(0), optionBouton), Actions.addAction(Actions.alpha(0), moreAppsBouton)));
+			startBouton.addAction(Actions.sequence(Actions.delay(0.1f), Actions.alpha(1, 0.1f), Actions.addAction(Actions.alpha(1, 0.1f), optionBouton), Actions.delay(0.1f), Actions.addAction(Actions.alpha(1, 0.1f), moreAppsBouton)));
 		}
 	}
 	
@@ -137,14 +126,6 @@ public class MenuPrincipale {
 				Donnees.setRate(true);
 		       	Gdx.net.openURI(GameConstants.GOOGLE_PLAY_GAME_URL);
 		       	//Gdx.net.openURI(Variables.AMAZON_GAME_URL);
-				
-			}
-		});
-		
-		removeAdsBouton.addListener(new ClickListener(){
-			@Override
-			public void clicked(InputEvent event, float x, float y){
-				game.actionResolver.removeAds();
 				
 			}
 		});

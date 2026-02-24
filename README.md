@@ -1,2 +1,8 @@
 # Minimal Brick Breaker Free
-A Breakout remake for Android developed on libGDX. This is the free version, inclunding adds.
+
+A Breakout remake built with libGDX for Android.
+
+## Current Direction
+- Android-only build target.
+- Anchored adaptive banner ads + interstitial ads.
+- Modernized Gradle/Android toolchain and runtime compatibility updates.

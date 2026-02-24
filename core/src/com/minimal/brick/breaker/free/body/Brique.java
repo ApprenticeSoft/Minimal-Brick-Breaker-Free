@@ -25,7 +25,7 @@ public class Brique extends PolygonShape{
 	public Body body;
 	public BodyDef bodyDef;
 	public float posX, posY, width, height;
-	static World world;
+	private final World world;
 	BriqueEnum briqueEnum;
 	Camera camera;
 	Couleurs couleurs = new Couleurs(GameConstants.groupeSelectione);
@@ -182,7 +182,7 @@ public class Brique extends PolygonShape{
 						body.getAngle()*MathUtils.radiansToDegrees);
 	}
 	
-	public static void detruire(Array<Brique> array){
+	public static void detruire(Array<Brique> array, World world){
 		for(int i = 0; i < array.size; i++){
         	if(!array.get(i).visible){
         		array.get(i).body.setActive(false);

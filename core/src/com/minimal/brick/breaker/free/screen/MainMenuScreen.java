@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -15,7 +16,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.MyGdxGame;
 import com.minimal.brick.breaker.free.GameConstants;
-import com.minimal.brick.breaker.free.menus.BoutonsReseauxSociaux;
 import com.minimal.brick.breaker.free.menus.NewGameAd;
 import com.minimal.brick.breaker.free.menus.TableNotation;
 import com.minimal.brick.breaker.free.menus.MenuPrincipale;
@@ -28,14 +28,16 @@ public class MainMenuScreen implements Screen {
 	private Skin skin;
 	private TextureAtlas textureAtlas;
 	private BitmapFont fontTitre;
+	private float titleWidth;
 	private TableNotation tableNotation;
 	private MenuPrincipale menuPrincipale;
-	private BoutonsReseauxSociaux boutonsReseauxSociaux;
 	private TextButtonStyle textButtonStyle;
 	private NewGameAd cosmonautAd;
+	private boolean listenersBound;
 	
 	public MainMenuScreen(final MyGdxGame gam){
 		game = gam;
+		listenersBound = false;
 	
 		if(!game.music.isPlaying())
 			game.music.play();
@@ -50,9 +52,7 @@ public class MainMenuScreen implements Screen {
 		skin.addRegions(textureAtlas);
 		
 		fontTitre = game.assets.get("fontTitre.ttf", BitmapFont.class);
-
-		boutonsReseauxSociaux = new BoutonsReseauxSociaux(gam, skin);
-		boutonsReseauxSociaux.draw(stage);
+		titleWidth = new GlyphLayout(fontTitre, "MINIMAL BRICK BREAKER").width;
 		
 		menuPrincipale = new MenuPrincipale(gam, skin, stage, new Color(0.27f, 0.695f, 0.613f, 1));
 		
@@ -69,7 +69,7 @@ public class MainMenuScreen implements Screen {
 		textButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
 		
 		/*
-		 * TEST PUBLICITÉ NOUVEAU JEU
+		 * TEST PUBLICITÃ‰ NOUVEAU JEU
 		 */
 		if(!Donnees.getPromoteCosmonaut())
 			if(Donnees.getRateCount() < 2 || Donnees.getNiveau() > 3){
@@ -85,6 +85,7 @@ public class MainMenuScreen implements Screen {
 									game.langue.jouer);
 				cosmonautAd.setBackgroundColor(51/256f,77/256f,92/256f, 1); 
 				cosmonautAd.addToStage(stage);
+				cosmonautAd.action();
 			}
 	}
 	
@@ -93,17 +94,12 @@ public class MainMenuScreen implements Screen {
 		Gdx.gl.glClearColor(0.27f, 0.695f, 0.613f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	
-		if(!Donnees.getPromoteCosmonaut())
-			if(Donnees.getRateCount() < 2 || Donnees.getNiveau() > 3)
-				cosmonautAd.action();
-		
 		game.batch.setProjectionMatrix(camera.combined);
 		game.batch.begin();
-		fontTitre.draw(game.batch, "MINIMAL BRICK BREAKER", 
-						Gdx.graphics.getWidth()/2 - game.assets.get("fontTitre.ttf", BitmapFont.class).getBounds("MINIMAL BRICK BREAKER").width/2, 
-						85*Gdx.graphics.getHeight()/100);
+			fontTitre.draw(game.batch, "MINIMAL BRICK BREAKER", 
+							Gdx.graphics.getWidth()/2 - titleWidth/2, 
+							85*Gdx.graphics.getHeight()/100);
 		game.batch.end();
-		
 		stage.act();
 		stage.draw();
 		
@@ -113,19 +109,23 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		camera.setToOrtho(false, width, height);
+		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
 		Gdx.input.setInputProcessor(stage);
+		game.actionResolver.showBanner();
+		if (listenersBound) {
+			return;
+		}
+		listenersBound = true;
 		
 		if(!Donnees.getRate() && Donnees.getRateCount() < 1){
 			tableNotation.action();
 		}
 
-		boutonsReseauxSociaux.action();
 		menuPrincipale.boutonListener();
 	}
 
@@ -149,6 +149,9 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void dispose() {
+		if (cosmonautAd != null) {
+			cosmonautAd.dispose();
+		}
 		skin.dispose();
 		stage.dispose();
 	}

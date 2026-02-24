@@ -6,8 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
-import com.minimal.brick.breaker.free.Donnees;
 import com.minimal.brick.breaker.free.screen.LoadingScreen;
 
 public class MyGdxGame extends Game implements ApplicationListener {
@@ -33,15 +31,6 @@ public class MyGdxGame extends Game implements ApplicationListener {
 		
 		if(Donnees.getGroupe() > 3 && !Donnees.getMicrogravite())
 			Donnees.setMicrogravite(true);
-		
-		//Donnees.setGroupe(4);
-		//Donnees.setNiveau(25);
-		//Donnees.setGroupe(2);
-		//Donnees.setNiveau(17);
-		//Donnees.setEpileptique(true);
-		//Donnees.setMicrogravite(true);
-		
-		Donnees.setInterstitial(Donnees.getInterstitial() + 1);
 
 		if(!Donnees.getRate()){
 			Donnees.setRateCount(Donnees.getRateCount() - 1);
@@ -54,49 +43,28 @@ public class MyGdxGame extends Game implements ApplicationListener {
 		
 		music = Gdx.audio.newMusic(Gdx.files.internal("Sons/Minimal Brick Breaker - Menu.ogg"));
 		music.setLooping(true);
+
+		actionResolver.preloadInterstitial();
 		
 		this.setScreen(new LoadingScreen(this));
-		
-		System.out.println("Donnees.getRate() = " + Donnees.getRate());
-		System.out.println("Donnees.getRateCount() = " + Donnees.getRateCount());
 	}
 
 	@Override
 	public void render () {
 		super.render();
 
-		if(!Donnees.getSon())
-			music.setVolume(0);
-		else
-			music.setVolume(1);
-		
-		if(!actionResolver.adsListener()){
-			actionResolver.LoadInterstital();
-			
-			if(GameConstants.niveauFini || GameConstants.pause)
-				actionResolver.showAdsTop();
-			else
-				actionResolver.hideAds();
-			
-			if(GameConstants.INTERSTITIAL_TRIGGER < 1){
-				GameConstants.INTERSTITIAL_TRIGGER = MathUtils.random(1,2);
-				actionResolver.showOrLoadInterstital();
-			}
-			
-			if(Donnees.getInterstitial() > 5){
-				actionResolver.showOrLoadInterstital();
-				Donnees.setInterstitial(Donnees.getInterstitial() - 1);
-			}
-		}
-		else if(actionResolver.adsListener()){
-			actionResolver.hideAds();
-		}
-		else  {
-			actionResolver.hideAds();
+		float targetVolume = Donnees.getSon() ? 1f : 0f;
+		if (music.getVolume() != targetVolume) {
+			music.setVolume(targetVolume);
 		}
 	}
 	 
 	public void dispose() {
+		if (getScreen() != null) {
+			getScreen().dispose();
+		}
+		music.dispose();
+		assets.dispose();
 		batch.dispose();
 	}	 
 }

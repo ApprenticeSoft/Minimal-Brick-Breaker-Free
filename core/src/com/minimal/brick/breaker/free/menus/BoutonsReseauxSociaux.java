@@ -13,27 +13,43 @@ public class BoutonsReseauxSociaux {
 
 	final MyGdxGame game;
 	private ImageButton facebookBouton, twitterBouton, logoBouton;
+	private float appliedBottomInset;
 	
 	public BoutonsReseauxSociaux(final MyGdxGame gam, Skin skin){
 		game = gam;
+		appliedBottomInset = -1f;
 		
 		facebookBouton = new ImageButton(skin.getDrawable("Facebook"), skin.getDrawable("FacebookDown"));
-		facebookBouton.setWidth(0.071f * Gdx.graphics.getHeight());
-		facebookBouton.setHeight(facebookBouton.getWidth());
-		facebookBouton.setX(Gdx.graphics.getWidth()/30);
-		facebookBouton.setY(facebookBouton.getX());
 		
 		twitterBouton = new ImageButton(skin.getDrawable("Twitter"), skin.getDrawable("TwitterDown"));
-		twitterBouton.setWidth(facebookBouton.getWidth());
-		twitterBouton.setHeight(facebookBouton.getWidth());
-		twitterBouton.setX(facebookBouton.getX() + 1.4f * facebookBouton.getWidth());
-		twitterBouton.setY(facebookBouton.getY());
 		
 		logoBouton = new ImageButton(skin.getDrawable("Logo"), skin.getDrawable("LogoDown"));
-		logoBouton.setWidth(facebookBouton.getWidth());
-		logoBouton.setHeight(facebookBouton.getWidth());
-		logoBouton.setX(twitterBouton.getX() + 1.4f * twitterBouton.getWidth());
-		logoBouton.setY(facebookBouton.getY());
+		applyBottomInset(0f);
+	}
+
+	public void applyBottomInset(float bottomInsetPx) {
+		if (Math.abs(appliedBottomInset - bottomInsetPx) < 1f) {
+			return;
+		}
+		appliedBottomInset = bottomInsetPx;
+		float iconSize = 0.071f * Gdx.graphics.getHeight();
+		float margin = Gdx.graphics.getWidth() / 30f;
+		float y = margin + Math.max(0f, bottomInsetPx);
+
+		facebookBouton.setWidth(iconSize);
+		facebookBouton.setHeight(iconSize);
+		facebookBouton.setX(margin);
+		facebookBouton.setY(y);
+
+		twitterBouton.setWidth(iconSize);
+		twitterBouton.setHeight(iconSize);
+		twitterBouton.setX(facebookBouton.getX() + 1.4f * iconSize);
+		twitterBouton.setY(y);
+
+		logoBouton.setWidth(iconSize);
+		logoBouton.setHeight(iconSize);
+		logoBouton.setX(twitterBouton.getX() + 1.4f * iconSize);
+		logoBouton.setY(y);
 	}
 	
 	public void draw(Stage stage){

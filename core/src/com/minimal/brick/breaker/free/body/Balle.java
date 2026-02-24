@@ -22,7 +22,7 @@ public class Balle extends CircleShape{
 	public Body body;
 	public BodyDef bodyDef;
 	public float posX, posY, rayon;
-	public static World world;
+	private final World world;
 	Camera camera;
 	public boolean balleActive, startImpulse, balleLaserContact;
     private Vector2 vectorSpeed;
@@ -75,14 +75,14 @@ public class Balle extends CircleShape{
 		vectorSpeed = body.getLinearVelocity();		
 		body.setLinearVelocity(vectorSpeed.clamp(maxSpeed, maxSpeed));
 		
-		//Déplacement de la balle	
+		//DÃ©placement de la balle	
 		if(startImpulse && !balleActive && !Gdx.input.isTouched()){
 			balleActive = true;
 			initY = MathUtils.random(-3,3);
-			body.applyLinearImpulse(initY, 10, body.getPosition().x, body.getPosition().y, true);
+			body.applyLinearImpulse(initY, 5, body.getPosition().x, body.getPosition().y, true);
 		}
 
-		//La balle ne sort pas de l'écran
+		//La balle ne sort pas de l'Ã©cran
 		if(body.getPosition().x - rayon < 0)
 			body.setTransform(rayon, body.getPosition().y, 0);
 		if(body.getPosition().x + rayon > camera.viewportWidth)
@@ -120,7 +120,7 @@ public class Balle extends CircleShape{
 	}
 	
 	public void draw(SpriteBatch batch, TextureRegion textureRegion){
-		if(this.body.getUserData() == "BalleLaser")
+		if("BalleLaser".equals(this.body.getUserData()))
 			batch.setColor(1, 0, 0, 1);
 		else
 			batch.setColor(1, 1, 1, 1);
@@ -136,7 +136,7 @@ public class Balle extends CircleShape{
 		maxSpeed = vitesseBalles * vitesseJeu * camera.viewportHeight;;
 	}
 	
-	public static void detruire(Array<Balle> array){
+	public static void detruire(Array<Balle> array, World world){
 		for(int i = 0; i < array.size; i++){
         	if(array.get(i).body.getPosition().y < -2*array.get(i).getRadius()){
         		array.get(i).body.setActive(false);

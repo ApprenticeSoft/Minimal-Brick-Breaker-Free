@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -44,6 +45,9 @@ public class NiveauxScreen implements Screen{
 	private ScrollPane scrollPaneGroupe;
 	private ActionBouton action;
 	private float scrollPaneGroupeActif, scrollPaneGroupeInactif, tableNiveauxActif, tableNiveauxInactif;
+	private boolean listenersBound;
+	private GlyphLayout titleLayout;
+	private float appliedBottomInsetPx;
 	
 	
 
@@ -52,6 +56,9 @@ public class NiveauxScreen implements Screen{
 		GameConstants.choixNiveau = false;
 		
 		action = new ActionBouton();
+		listenersBound = false;
+		titleLayout = new GlyphLayout();
+		appliedBottomInsetPx = -1f;
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -68,7 +75,7 @@ public class NiveauxScreen implements Screen{
 		textButtonStyle.fontColor = Color.WHITE;
 		textButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
 		
-		//Style des boutons des groupes et niveaux non débloqués
+		//Style des boutons des groupes et niveaux non dÃ©bloquÃ©s
 		textButtonStyleInactif = new TextButtonStyle();
 		textButtonStyleInactif.up = skin.getDrawable("BoutonInactifPatch");
 		textButtonStyleInactif.font = game.assets.get("font1.ttf", BitmapFont.class);
@@ -84,7 +91,7 @@ public class NiveauxScreen implements Screen{
 		textButtonStyleSpecial.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
 		textButtonStyleSpecial.checkedFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
 		
-		//Titre de l'écran
+		//Titre de l'Ã©cran
 		/*
 		titre = new TextButton(gam.langue.choisirGroupe.toUpperCase(), textButtonStyle);
 		titre.setTouchable(Touchable.disabled);
@@ -151,7 +158,7 @@ public class NiveauxScreen implements Screen{
 		retourBouton.setHeight(Gdx.graphics.getWidth()/7);
 		retourBouton.setX(niveaux.get(0).localToStageCoordinates(new Vector2(0,0)).x - tableNiveauxInactif + tableNiveauxActif);
 		//retourBouton.setY(niveaux.get(20).localToStageCoordinates(new Vector2(0,0)).y - Gdx.graphics.getWidth()/50 - retourBouton.getHeight());
-		retourBouton.setY(Gdx.graphics.getWidth()/50);
+		retourBouton.setY(getBottomButtonsY(0f));
 		
 		//Bouton Microgravite
 		if(Donnees.getMicrogravite()){
@@ -208,38 +215,32 @@ public class NiveauxScreen implements Screen{
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0.27f, 0.695f, 0.613f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		updateBottomInsetLayout();
 		
 		game.batch.setProjectionMatrix(camera.combined);
 		game.batch.begin();
-		if(!GameConstants.choixNiveau)
-			game.assets.get("fontTitre.ttf", BitmapFont.class).draw(game.batch, game.langue.choisirGroupe.toUpperCase(), 
-																	Gdx.graphics.getWidth()/2 - game.assets.get("fontTitre.ttf", BitmapFont.class).getBounds(game.langue.choisirGroupe.toUpperCase()).width/2, 
-																	90*Gdx.graphics.getHeight()/100);
-		else 
-			game.assets.get("fontTitre.ttf", BitmapFont.class).draw(game.batch, game.langue.groupe.toUpperCase() + " " + GameConstants.groupeSelectione, 
-																	Gdx.graphics.getWidth()/2 - game.assets.get("fontTitre.ttf", BitmapFont.class).getBounds(game.langue.groupe.toUpperCase() + " " + GameConstants.groupeSelectione).width/2, 
-																	90*Gdx.graphics.getHeight()/100);
+		String title;
+		if(!GameConstants.choixNiveau) {
+			title = game.langue.choisirGroupe.toUpperCase();
+		} else {
+			title = game.langue.groupe.toUpperCase() + " " + GameConstants.groupeSelectione;
+		}
+		BitmapFont titleFont = game.assets.get("fontTitre.ttf", BitmapFont.class);
+		titleLayout.setText(titleFont, title);
+		titleFont.draw(game.batch, title, Gdx.graphics.getWidth()/2 - titleLayout.width/2, 90*Gdx.graphics.getHeight()/100);
 		game.batch.end();
 		
-		//Déplacement des affichages des groupes et niveaux
+		// DÃ©placement des affichages des groupes et niveaux
 		if(!GameConstants.choixNiveau){
-			scrollPaneGroupe.addAction(Actions.moveTo(scrollPaneGroupeActif,
-										scrollPaneGroupe.getY(), 
-										0.25f));	
-			tableNiveaux.addAction(Actions.moveTo(tableNiveauxInactif,
-					tableNiveaux.getY(), 
-					0.25f));	
+			scrollPaneGroupe.setPosition(scrollPaneGroupeActif, scrollPaneGroupe.getY());
+			tableNiveaux.setPosition(tableNiveauxInactif, tableNiveaux.getY());
 		}
 		else{
-			scrollPaneGroupe.addAction(Actions.moveTo(scrollPaneGroupeInactif,
-										scrollPaneGroupe.getY(), 
-										0.25f));	
-			tableNiveaux.addAction(Actions.moveTo(tableNiveauxActif,
-					tableNiveaux.getY(), 
-					0.25f));	
+			scrollPaneGroupe.setPosition(scrollPaneGroupeInactif, scrollPaneGroupe.getY());
+			tableNiveaux.setPosition(tableNiveauxActif, tableNiveaux.getY());
 		}
 		
-		//Activation et désactivation des boutons en fonctions des groupes et niveaux débloqués
+		//Activation et dÃ©sactivation des boutons en fonctions des groupes et niveaux dÃ©bloquÃ©s
 		if(GameConstants.groupeSelectione < Donnees.getGroupe()){
 			for(TextButton textButton : niveaux){
 				textButton.setStyle(textButtonStyle);
@@ -274,22 +275,31 @@ public class NiveauxScreen implements Screen{
 		stage.draw();	
 		
 		 //Utilisation du bouton BACK
-        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
-        	  if(GameConstants.choixNiveau) GameConstants.choixNiveau = false;
-        	  else game.setScreen(new MainMenuScreen(game));
-        }
+	        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
+	        	  if(GameConstants.choixNiveau) GameConstants.choixNiveau = false;
+	        	  else {
+	        		  dispose();
+	        		  game.setScreen(new MainMenuScreen(game));
+	        	  }
+	        }
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		camera.setToOrtho(false, width, height);
+		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
 		Gdx.input.setInputProcessor(stage);
-		Gdx.input.setCatchBackKey(true);
+		Gdx.input.setCatchKey(Keys.BACK, true);
+		game.actionResolver.showBanner();
+		updateBottomInsetLayout();
+		if (listenersBound) {
+			return;
+		}
+		listenersBound = true;
 		
 		if(Donnees.getGroupe() <= GameConstants.NombreDeGroupes){
 			for(int i = 0; i < Donnees.getGroupe(); i++){
@@ -393,5 +403,21 @@ public class NiveauxScreen implements Screen{
 	public void dispose() {
 		skin.dispose();
 		stage.dispose();
+	}
+
+	private float getBottomButtonsY(float bottomInsetPx) {
+		return Math.max(0f, bottomInsetPx) + Gdx.graphics.getWidth() / 50f;
+	}
+
+	private void updateBottomInsetLayout() {
+		float bottomInsetPx = Math.max(0f, game.actionResolver.getBannerHeightPx());
+		if (Math.abs(bottomInsetPx - appliedBottomInsetPx) < 1f) {
+			return;
+		}
+		appliedBottomInsetPx = bottomInsetPx;
+		float y = getBottomButtonsY(bottomInsetPx);
+		retourBouton.setY(y);
+		graviteBouton.setY(y);
+		epileptiqueBouton.setY(y);
 	}
 }

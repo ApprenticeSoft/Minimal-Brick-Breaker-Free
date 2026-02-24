@@ -10,9 +10,9 @@ import com.minimal.brick.breaker.free.enums.BriqueEnum;
 
 public class LevelHandler {
 	
-	private static Array<Brique> briquesBox2D;
-	private static World world;
-	private static Camera camera;
+	private final Array<Brique> briquesBox2D;
+	private final World world;
+	private final Camera camera;
 	
 	public LevelHandler(World world, Camera camera, Array<Brique> briques){
 		this.briquesBox2D = briques;
@@ -20,7 +20,7 @@ public class LevelHandler {
 		this.camera = camera;
 	}
 	
-	public static void saveLevel(String fileName, BriqueEnum briqueEnum) {
+	public void saveLevel(String fileName, BriqueEnum briqueEnum) {
 		FileHandle file = Gdx.files.local("Niveaux/" + fileName + ".txt");
 		file.writeString("", false);
 		
@@ -30,8 +30,7 @@ public class LevelHandler {
     	}
 	}
 	
-	public static void loadLevel(int groupe, int niveau) {
-		System.out.println("loading level");
+	public void loadLevel(int groupe, int niveau) {
 		FileHandle file = Gdx.files.internal("Niveaux/Groupe " + groupe + "/Niveau " + niveau + ".txt");
 		String[] fileContent = file.readString().split("\n");
 		for(int i = 0; i < fileContent.length; i++) {
@@ -71,11 +70,10 @@ public class LevelHandler {
 					brique.body.setUserData("Brique");
 					brique.dispose();
 					
-				} catch (NumberFormatException nfe) {
-					System.out.println(nfe);				// malformed block data. ignore this block
-				}
+					} catch (NumberFormatException nfe) {
+						// malformed block data. ignore this block
+					}
 			}
 		}
 	}
 }
-

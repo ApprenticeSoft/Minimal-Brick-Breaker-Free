@@ -6,11 +6,14 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -33,6 +36,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.minimal.brick.breaker.free.Couleurs;
@@ -47,19 +52,20 @@ import com.minimal.brick.breaker.free.body.Bouclier;
 import com.minimal.brick.breaker.free.body.Brique;
 import com.minimal.brick.breaker.free.body.Laser;
 import com.minimal.brick.breaker.free.body.Objets;
-import com.minimal.brick.breaker.free.screen.MainMenuScreen;
 
 public class GameScreen extends InputAdapter implements Screen{
 
 	final MyGdxGame game;
 	OrthographicCamera camera;
 	World world; 
-    static int initY, son, spawnObjet;    
+    static int son, spawnObjet;    
     private PolygonShape boxBordure;
     private BodyDef bordureBodyDef;
     private Body bodyHaut, bodyGauche, bodyDroite;
 	private Skin skin;
 	private TextureAtlas textureAtlas;
+	private TextureRegion regionBarre;
+	private TextureRegion regionBalle;
 	boolean spawn;
 	
 	Stage stage;
@@ -69,8 +75,10 @@ public class GameScreen extends InputAdapter implements Screen{
 	TextButton nextBouton, replayBouton, 
 				resumeBouton, restartBouton, restartBouton2, menuBouton, menuBouton2, 
 				groupeFini, groupeDebloque, jeuFini,
-				quitBouton,
+				quitBouton, pauseBouton,
 				micrograviteDebloque, epileptiqueDebloque;
+	private Texture pauseButtonUpTexture;
+	private Texture pauseButtonDownTexture;
 	LabelStyle labelStyle;
 	Label labelComplete, labelPerdu;
 	
@@ -89,16 +97,21 @@ public class GameScreen extends InputAdapter implements Screen{
 
 	long lastDropTime;
 	private int couleurEdit, couleurMin, couleurMax;
+	private int appliedColorGroup;
 	float spawnX, spawnY;
+	private boolean adBreakSent;
+	private boolean bannerVisible;
+	private boolean listenersBound;
 	
-	FPSLogger fps;
 	Box2DDebugRenderer debugRenderer; 
 	
 	public GameScreen(final MyGdxGame gam){
 		game = gam;
-		
-		fps = new FPSLogger();
+		adBreakSent = false;
+		bannerVisible = false;
+		listenersBound = false;
 		couleurEdit = GameConstants.groupeSelectione;
+		appliedColorGroup = -1;
 		if(GameConstants.epileptique){
 			couleurMin = 1;
 			couleurMax = 19;
@@ -137,8 +150,10 @@ public class GameScreen extends InputAdapter implements Screen{
 		skin = new Skin();
 		textureAtlas = game.assets.get("Images.pack", TextureAtlas.class);
 		skin.addRegions(textureAtlas);
+		regionBarre = textureAtlas.findRegion("Barre");
+		regionBalle = textureAtlas.findRegion("Balle");
 		
-        //Bordure de l'écran de jeu  
+        //Bordure de l'Ã©cran de jeu  
 		bordureBodyDef = new BodyDef();    
         boxBordure = new PolygonShape();  
         boxBordure.setAsBox(camera.viewportWidth/2, camera.viewportHeight/100);     
@@ -181,14 +196,24 @@ public class GameScreen extends InputAdapter implements Screen{
 		textButtonStyle.up = skin.getDrawable("FondTable2");
 		textButtonStyle.down = skin.getDrawable("BoutonCheckedPatch");
 		textButtonStyle.font = game.assets.get("font1.ttf", BitmapFont.class);
-		textButtonStyle.fontColor = Color.WHITE;
-		textButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
-		
-		nextBouton = new TextButton(gam.langue.suivant, textButtonStyle);	
-		replayBouton = new TextButton(gam.langue.rejouer, textButtonStyle);
-		
-		labelStyle = new LabelStyle(game.assets.get("font1.ttf", BitmapFont.class), Color.WHITE);
-		labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
+			textButtonStyle.fontColor = Color.WHITE;
+			textButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+			
+			nextBouton = new TextButton(gam.langue.suivant, textButtonStyle);	
+			replayBouton = new TextButton(gam.langue.menu, textButtonStyle);
+			TextButtonStyle pauseButtonStyle = new TextButtonStyle();
+			pauseButtonUpTexture = createPauseButtonTexture(0f, 0.75f);
+			pauseButtonDownTexture = createPauseButtonTexture(0.2f, 0.95f);
+			pauseButtonStyle.up = new TextureRegionDrawable(new TextureRegion(pauseButtonUpTexture));
+			pauseButtonStyle.down = new TextureRegionDrawable(new TextureRegion(pauseButtonDownTexture));
+			pauseButtonStyle.font = game.assets.get("font1.ttf", BitmapFont.class);
+			pauseButtonStyle.fontColor = Color.WHITE;
+			pauseButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+			
+			labelStyle = new LabelStyle(game.assets.get("font1.ttf", BitmapFont.class), Color.WHITE);
+			labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
+			labelComplete.setFontScale(2f);
+			labelComplete.setAlignment(Align.center);
 		
 		tableFin = new Table();
 		tableFin.row().colspan(2);
@@ -200,18 +225,22 @@ public class GameScreen extends InputAdapter implements Screen{
 		tableFin.setY(Gdx.graphics.getHeight()/2 + tableFin.getPrefHeight()/4);
 		
 		//Table pause
-		resumeBouton = new TextButton(gam.langue.reprendre, textButtonStyle);
-		restartBouton = new TextButton(gam.langue.recommencer, textButtonStyle);	
-		menuBouton = new TextButton(gam.langue.menu, textButtonStyle);
-		quitBouton = new TextButton(gam.langue.quitter, textButtonStyle);
+			resumeBouton = new TextButton(gam.langue.reprendre, textButtonStyle);
+			restartBouton = new TextButton(gam.langue.recommencer, textButtonStyle);	
+			menuBouton = new TextButton(gam.langue.menu, textButtonStyle);
+			quitBouton = new TextButton(gam.langue.quitter, textButtonStyle);
+			pauseBouton = new TextButton("II", pauseButtonStyle);
+			pauseBouton.setWidth((Gdx.graphics.getWidth()/16f) * 1.3f);
+			pauseBouton.setHeight(pauseBouton.getWidth());
+			updatePauseButtonBounds();
 		
 		tablePause = new Table();
+		float restartTextWidth = new GlyphLayout(game.assets.get("font1.ttf", BitmapFont.class), gam.langue.recommencer).width;
 		if(Donnees.getLangue() == 2)
-			tablePause.defaults().height(Gdx.graphics.getHeight()/12).width(1.2f*game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.recommencer).width).space(Gdx.graphics.getHeight()/100);
+			tablePause.defaults().height(Gdx.graphics.getHeight()/12).width(1.2f * restartTextWidth).space(Gdx.graphics.getHeight()/100);
 		else
-			tablePause.defaults().height(Gdx.graphics.getHeight()/12).width(2*game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.recommencer).width).space(Gdx.graphics.getHeight()/100);
+			tablePause.defaults().height(Gdx.graphics.getHeight()/12).width(2f * restartTextWidth).space(Gdx.graphics.getHeight()/100);
 		tablePause.add(resumeBouton).row();
-		tablePause.add(restartBouton).row();
 		tablePause.add(menuBouton).row();
 		tablePause.add(quitBouton).row();
 		tablePause.setSize(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
@@ -222,6 +251,8 @@ public class GameScreen extends InputAdapter implements Screen{
 		//Table perdu
 		tablePerdu = new Table();
 		labelPerdu = new Label(gam.langue.perdu, labelStyle);
+		labelPerdu.setFontScale(2f);
+		labelPerdu.setAlignment(Align.center);
 		restartBouton2 = new TextButton(gam.langue.rejouer, textButtonStyle);	
 		menuBouton2 = new TextButton(gam.langue.menu, textButtonStyle);
 		
@@ -233,7 +264,7 @@ public class GameScreen extends InputAdapter implements Screen{
 		tablePerdu.setX(-Gdx.graphics.getWidth()/2);
 		tablePerdu.setY(Gdx.graphics.getHeight()/2 + tablePerdu.getPrefHeight()/4);
 		
-		//Bouton goupe debloqué
+		//Bouton goupe debloquÃ©
 		textButtonStyleFini = new TextButtonStyle();
 		textButtonStyleFini.up = skin.getDrawable("FondTable2");
 		textButtonStyleFini.font = game.assets.get("font1.ttf", BitmapFont.class);
@@ -267,11 +298,6 @@ public class GameScreen extends InputAdapter implements Screen{
 		micrograviteDebloque.setY(0);
 		micrograviteDebloque.addAction(Actions.alpha(0));
 		
-		System.out.println("Gdx.graphics.getHeight() = " + Gdx.graphics.getHeight());
-		System.out.println("Hauteur du texte = " + game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.micrograviteDebloque).height);
-		System.out.println("Gdx.graphics.getWidth() = " + Gdx.graphics.getWidth());
-		System.out.println("Largeur du texte = " + game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.micrograviteDebloque).width);
-		
 		epileptiqueDebloque = new TextButton(gam.langue.epileptiqueDebloque, textButtonStyleFini);
 		//epileptiqueDebloque.setWidth(game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.epileptiqueDebloque).width + Gdx.graphics.getWidth()/50);
 		//epileptiqueDebloque.setHeight(game.assets.get("font1.ttf", BitmapFont.class).getBounds(gam.langue.epileptiqueDebloque).height + Gdx.graphics.getHeight()/100);
@@ -295,14 +321,13 @@ public class GameScreen extends InputAdapter implements Screen{
 		stage.addActor(jeuFini);
 		stage.addActor(micrograviteDebloque);
 		stage.addActor(epileptiqueDebloque);
+		stage.addActor(pauseBouton);
 		tableFin.setVisible(false);
 
         debugRenderer = new Box2DDebugRenderer();
         
         GameConstants.briquesInitiales = briques.size;
-        System.out.println("Variables.briquesInitiales = " + GameConstants.briquesInitiales);
         GameConstants.briquesDetruitesAuLaser = 0;
-        System.out.println(" Variables.briquesDetruitesAuLaser = " +  GameConstants.briquesDetruitesAuLaser);
         /*
         for(BriqueBox2D brique: briques){
         	brique.body.setAwake(true);
@@ -312,31 +337,36 @@ public class GameScreen extends InputAdapter implements Screen{
 	
 	@Override
 	public void render(float delta) {  
-		couleurs.setGroupe(couleurEdit);
-		for(Brique brique : briques){
-			brique.setCouleur(couleurEdit);
+		if (appliedColorGroup != couleurEdit) {
+			couleurs.setGroupe(couleurEdit);
+			for (Brique brique : briques) {
+				brique.setCouleur(couleurEdit);
+			}
+			appliedColorGroup = couleurEdit;
 		}
 		
 		Gdx.gl.glClearColor(couleurs.getCouleur5().r, couleurs.getCouleur5().g, couleurs.getCouleur5().b, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
-		//fps.log();
-		
 		for(Balle balle : balles){
 			balle.active();
 		}
 
-		//Déplacement de la barre
+		// DÃ©placement de la barre
 		barre.deplacement();
 		bouclier.actif();
         
-		//Fin du niveau
+		// Fin du niveau
 		if(briques.size == 0 && !GameConstants.niveauFini){
-			GameConstants.INTERSTITIAL_TRIGGER--;
 			sonNiveauFini.play();
 			GameConstants.niveauFini = true;
 			GameConstants.BOX_STEP = 0;
 			imagePause.addAction(Actions.alpha(0.75f, 0.25f));
+
+			if (!adBreakSent) {
+				adBreakSent = true;
+				game.actionResolver.onNaturalBreak();
+			}
 			
 
 			if(GameConstants.niveauSelectione == 25 && GameConstants.groupeSelectione == GameConstants.NombreDeGroupes){
@@ -366,49 +396,42 @@ public class GameScreen extends InputAdapter implements Screen{
 			}
 		}
 		
-		//Niveau perdu
-		if(GameConstants.viesPerdues == 3){
-			if(!GameConstants.niveauFini){
-				sonPerdu.play();
-				GameConstants.INTERSTITIAL_TRIGGER--;
-			}
+		// Niveau perdu
+		if(GameConstants.viesPerdues == 3 && !GameConstants.niveauFini){
+			sonPerdu.play();
 			GameConstants.niveauFini = true;
 			GameConstants.BOX_STEP = 0;
 			imagePause.addAction(Actions.alpha(0.75f, 0.25f));
-			tablePerdu.addAction(Actions.moveTo(Gdx.graphics.getWidth()/2, tablePerdu.getY(), 0.2f));			
+			tablePerdu.addAction(Actions.moveTo(Gdx.graphics.getWidth()/2, tablePerdu.getY(), 0.2f));
+
+			if (!adBreakSent) {
+				adBreakSent = true;
+				game.actionResolver.onNaturalBreak();
+			}
 		}
-		 
+
+		boolean shouldShowBanner = GameConstants.pause || GameConstants.niveauFini;
+		if (shouldShowBanner != bannerVisible) {
+			bannerVisible = shouldShowBanner;
+			if (bannerVisible) {
+				game.actionResolver.showBanner();
+			} else {
+				game.actionResolver.hideBanner();
+			}
+		}
+
+		pauseBouton.setVisible(canTogglePause());
+		
         world.step(GameConstants.BOX_STEP, GameConstants.BOX_VELOCITY_ITERATIONS, GameConstants.BOX_POSITION_ITERATIONS);
         
-        //Mettre le jeu en pause
-        if (Gdx.input.isKeyJustPressed(Keys.BACK) && /*!tableFin.isVisible()*/ GameConstants.viesPerdues < 3 && briques.size != 0){
-			if(GameConstants.pause){
-				GameConstants.pause = false;
-				
-				if(briques.size != 0){
-			       	GameConstants.BOX_STEP = 1/60f;
-			       	imagePause.addAction(Actions.alpha(0, 0.25f));
-			       	tablePause.addAction(Actions.moveTo(2 * Gdx.graphics.getWidth(),
-								tablePause.getY(), 
-								0.25f));
-				}
-			}
-       	  	else{
-       	  		GameConstants.pause = true;
-       	  		
-       	  		if(briques.size != 0){
-       		       	GameConstants.BOX_STEP = 0;
-       		       	imagePause.addAction(Actions.alpha(0.75f, 0.25f));
-       		       	tablePause.addAction(Actions.moveTo(Gdx.graphics.getWidth()/2 - tablePause.getWidth()/2,
-       							tablePause.getY(), 
-       							0.25f));
-       			}
-       	  	}
+        // Mettre le jeu en pause
+        if (Gdx.input.isKeyJustPressed(Keys.BACK) && canTogglePause()){
+			togglePause();
 		}
         
-        //Apparition des objets
+        // Apparition des objets
         if(spawn){
-        	//Jamais plus de 4 objets en même temps
+        	//Jamais plus de 4 objets en mÃªme temps
         	if(objets.size < 4){													
         	Objets objet = new Objets(world, camera, spawnX, spawnY, barre, balles, lasers);
         	objets.add(objet);
@@ -437,7 +460,7 @@ public class GameScreen extends InputAdapter implements Screen{
 				GameConstants.tirs = 0;
 			}
 		}
-        //Vie perdue - Apparition d'une balle & réinitialisation des powerups
+        //Vie perdue - Apparition d'une balle & rÃ©initialisation des powerups
         if(balles.size == 0){
     		balle = new Balle(world, camera, barre.body.getPosition().x, (barre.body.getPosition().y + camera.viewportWidth/50 + camera.viewportHeight/100));
     		balles.add(balle);
@@ -446,14 +469,13 @@ public class GameScreen extends InputAdapter implements Screen{
     		GameConstants.laserActif = false;
     		GameConstants.tirs = 0;  	
     		GameConstants.viesPerdues++;
-    		System.out.println("Vies perdues = " +GameConstants.viesPerdues);
         }
         
-        //Destruction des briques, balles, lasers et objets
-		Brique.detruire(briques);
-        Laser.detruire(lasers);
-        Balle.detruire(balles);
-        Objets.detruire(objets);
+        // Destruction des briques, balles, lasers et objets
+		Brique.detruire(briques, world);
+        Laser.detruire(lasers, world, camera.viewportHeight);
+        Balle.detruire(balles, world);
+        Objets.detruire(objets, world);
                
         //Gestion de la vitesse de la balle
         if(GameConstants.vitesseBalle == GameConstants.vitesseBalleMin && (TimeUtils.millis() - GameConstants.vitesseBalleTime) > 5100)
@@ -462,60 +484,69 @@ public class GameScreen extends InputAdapter implements Screen{
         	GameConstants.vitesseBalle = GameConstants.vitesseBalleNormale;
         
           
-		//debugRenderer.render(world, camera.combined);
+		// debugRenderer.render(world, camera.combined);
 		
 		/**********************************Affichage des graphismes************************************/
 		game.batch.begin();
-		//Affichage des ombres
+		// Affichage des ombres
 		for(int i = 0; i < briques.size; i++){
-			briques.get(i).drawOmbre(game.batch, textureAtlas.findRegion("Barre"));
+			briques.get(i).drawOmbre(game.batch, regionBarre);
 		}
 		for(int i = 0; i < lasers.size; i++){
-			lasers.get(i).drawOmbre(game.batch, textureAtlas.findRegion("Barre"));
+			lasers.get(i).drawOmbre(game.batch, regionBarre);
 		}
 		for(Balle balle : balles){
-			balle.drawOmbre(game.batch, textureAtlas.findRegion("Balle"));
+			balle.drawOmbre(game.batch, regionBalle);
 		}
 		
-		//Affichage des briques
+		// Affichage des briques
 		for(int i = 0; i < briques.size; i++){
-			briques.get(i).draw(game.batch, textureAtlas.findRegion("Barre"));
+			briques.get(i).draw(game.batch, regionBarre);
 		}
-		//Affichage de la barre
-		barre.draw(game.batch, textureAtlas.findRegion("Barre"));
-		//Affichage des objets
+		// Affichage de la barre
+		barre.draw(game.batch, regionBarre);
+		// Affichage des objets
 		for(int i = 0; i < objets.size; i++){
 			objets.get(i).draw(game.batch, textureAtlas);
 		}
-		//Affichage des Lasers
+		// Affichage des Lasers
 		for(int i = 0; i < lasers.size; i++){
-			lasers.get(i).draw(game.batch, textureAtlas.findRegion("Barre"));
+			lasers.get(i).draw(game.batch, regionBarre);
 		}	
-		//Affichage des balles
+		// Affichage des balles
 		game.batch.setColor(1,1,1,1);
 		for(Balle balle : balles){
-			balle.draw(game.batch, textureAtlas.findRegion("Balle"));
+			balle.draw(game.batch, regionBalle);
 		}
-		bouclier.draw(game.batch, textureAtlas.findRegion("Barre"));
+		bouclier.draw(game.batch, regionBarre);
 		game.batch.end();
 		
-        stage.act();
+        stage.act(delta);
         stage.draw();
 		/**********************************************************************************************/
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		camera.viewportHeight = height * GameConstants.WORLD_TO_BOX;
+		camera.viewportWidth = width * GameConstants.WORLD_TO_BOX;
+		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0f);
+		camera.update();
+		stage.getViewport().update(width, height, true);
+		updatePauseButtonBounds();
 	}
 
 	@Override
 	public void show() {	
-		//Important pour pouvoir utiliser la touche BACK
-		Gdx.input.setCatchBackKey(true);
-		//Permet d'interagir avec les Actors du Stage
+		// Important pour pouvoir utiliser la touche BACK
+		Gdx.input.setCatchKey(Keys.BACK, true);
+		// Permet d'interagir avec les Actors du Stage
 		Gdx.input.setInputProcessor(stage);
+		game.actionResolver.hideBanner();
+		if (listenersBound) {
+			return;
+		}
+		listenersBound = true;
 		
 		world.setContactListener(new ContactListener(){
 			@Override
@@ -596,7 +627,6 @@ public class GameScreen extends InputAdapter implements Screen{
 			    	if(a.getUserData().equals("Brique") && b.getUserData().equals("BalleLaser")){
 				    	couleurEdit = MathUtils.random(couleurMin,couleurMax);			//Choix de la couleur pour le mode Epileptique
 				        GameConstants.briquesDetruitesAuLaser++;
-				        System.out.println(" Variables.briquesDetruitesAuLaser = " +  GameConstants.briquesDetruitesAuLaser);
 				    	contact.setEnabled(false);
 				    	
 				    	for(Balle balle : balles){
@@ -629,12 +659,12 @@ public class GameScreen extends InputAdapter implements Screen{
 				    		}
 				    	}
 				    }
-				    else if((a.getUserData().equals("Objet") && b.getUserData() != "Barre") ||
-				    		(b.getUserData().equals("Objet") && a.getUserData() != "Barre")){
+				    else if((a.getUserData().equals("Objet") && !b.getUserData().equals("Barre")) ||
+				    		(b.getUserData().equals("Objet") && !a.getUserData().equals("Barre"))){
 				    	contact.setEnabled(false);
 				    }
-				    else if((a.getUserData().equals("Laser") && b.getUserData() != "Brique") ||
-				    		(b.getUserData().equals("Laser") && a.getUserData() != "Brique")){
+				    else if((a.getUserData().equals("Laser") && !b.getUserData().equals("Brique")) ||
+				    		(b.getUserData().equals("Laser") && !a.getUserData().equals("Brique"))){
 				    	contact.setEnabled(false);
 				    }
 				    else if((a.getUserData().equals("Balle") || a.getUserData().equals("BalleLaser")) &&
@@ -646,7 +676,7 @@ public class GameScreen extends InputAdapter implements Screen{
 
 			@Override
 			public void postSolve(Contact contact, ContactImpulse impulse) {
-				//Permet d'activer la destruction de l'objet touché par la barre, dans le renderer, sans faire planter l'osti de programme
+				//Permet d'activer la destruction de l'objet touchÃ© par la barre, dans le renderer, sans faire planter l'osti de programme
 				Body a = contact.getFixtureA().getBody();
 			    Body b = contact.getFixtureB().getBody();
 			    if(a.getUserData() != null && b.getUserData() != null){		
@@ -725,14 +755,8 @@ public class GameScreen extends InputAdapter implements Screen{
 		replayBouton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y){
-				for(Brique brique : briques){
-				world.destroyBody(brique.body);
-				}
-				if(briques.size > 0)
-					briques.removeRange(0, briques.size-1);
-				GameConstants.BOX_STEP = 1/60f;
 				dispose();
-				game.setScreen(new GameScreen(game));
+				game.setScreen(new MainMenuScreen(game));
 			}
 		});
 		
@@ -787,6 +811,15 @@ public class GameScreen extends InputAdapter implements Screen{
 		       	tablePause.addAction(Actions.moveTo(2 * Gdx.graphics.getWidth(),
 							tablePause.getY(), 
 							0.25f));
+			}
+		});
+
+		pauseBouton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				if (canTogglePause()) {
+					togglePause();
+				}
 			}
 		});
 		
@@ -862,32 +895,79 @@ public class GameScreen extends InputAdapter implements Screen{
 		balle.balleActive = true;
 		balle.startImpulse = true;
 		balles.add(balle);
-		balle.body.applyLinearImpulse(speed, new Vector2(balle.body.getPosition().x, balle.body.getPosition().y), true);
+		balle.body.applyLinearImpulse(speed.x, speed.y, balle.body.getPosition().x, balle.body.getPosition().y, true);
 		lastDropTime = TimeUtils.nanoTime();
 	}
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
-		
+		game.actionResolver.hideBanner();
 	}
 
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
-		
+		// no-op
 	}
 
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
-		
+		// no-op
 	}
 
 	@Override
 	public void dispose() {
 		skin.dispose();
 		stage.dispose();
+		debugRenderer.dispose();
 		world.dispose();
+		if(pauseButtonUpTexture != null)
+			pauseButtonUpTexture.dispose();
+		if(pauseButtonDownTexture != null)
+			pauseButtonDownTexture.dispose();
+	}
+
+	private Texture createPauseButtonTexture(float fillAlpha, float borderAlpha){
+		Pixmap pixmap = new Pixmap(96, 96, Pixmap.Format.RGBA8888);
+		pixmap.setColor(1, 1, 1, 0);
+		pixmap.fill();
+		if(fillAlpha > 0f){
+			pixmap.setColor(0, 0, 0, fillAlpha);
+			pixmap.fillRectangle(4, 4, 88, 88);
+		}
+		pixmap.setColor(1, 1, 1, borderAlpha);
+		for(int i = 0; i < 4; i++){
+			pixmap.drawRectangle(i, i, 96 - 2 * i, 96 - 2 * i);
+		}
+		Texture texture = new Texture(pixmap);
+		texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		pixmap.dispose();
+		return texture;
+	}
+
+	private boolean canTogglePause() {
+		return GameConstants.viesPerdues < 3 && briques.size != 0 && !GameConstants.niveauFini;
+	}
+
+	private void togglePause() {
+		if (GameConstants.pause) {
+			GameConstants.pause = false;
+			GameConstants.BOX_STEP = 1 / 60f;
+			imagePause.addAction(Actions.alpha(0, 0.25f));
+			tablePause.addAction(Actions.moveTo(2 * Gdx.graphics.getWidth(), tablePause.getY(), 0.25f));
+		} else {
+			GameConstants.pause = true;
+			GameConstants.BOX_STEP = 0;
+			imagePause.addAction(Actions.alpha(0.75f, 0.25f));
+			tablePause.addAction(Actions.moveTo(Gdx.graphics.getWidth()/2 - tablePause.getWidth()/2, tablePause.getY(), 0.25f));
+		}
+	}
+
+	private void updatePauseButtonBounds() {
+		if (pauseBouton == null) {
+			return;
+		}
+		float margin = Gdx.graphics.getWidth() / 40f;
+		pauseBouton.setX(Gdx.graphics.getWidth() - pauseBouton.getWidth() - margin);
+		pauseBouton.setY(Gdx.graphics.getHeight() - pauseBouton.getHeight() - margin);
 	}
 }

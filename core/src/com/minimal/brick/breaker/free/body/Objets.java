@@ -21,7 +21,7 @@ public class Objets extends PolygonShape{
 	public Body body;
 	private BodyDef bodyDef;
 	private FixtureDef fixtureDef;
-	private static World world;
+	private final World world;
 	private Camera camera;
 	private int type, balleRandom;
 	private float  width, height;
@@ -37,10 +37,9 @@ public class Objets extends PolygonShape{
 		while(type == GameConstants.dernierObjet || type == GameConstants.avantDernierObjet){
 			type = MathUtils.random(1,GameConstants.objet);	
 		}
-		if(GameConstants.briquesDetruitesAuLaser > (int)(0.35f*GameConstants.briquesInitiales) && type == 8){
-			type = MathUtils.random(1,GameConstants.objet);	
-			System.out.println("La balle laser a déjà fait trop de dégats !");
-		}
+			if(GameConstants.briquesDetruitesAuLaser > (int)(0.35f*GameConstants.briquesInitiales) && type == 8){
+				type = MathUtils.random(1,GameConstants.objet);	
+			}
 			
 		GameConstants.avantDernierObjet = GameConstants.dernierObjet;
 		GameConstants.dernierObjet = type;
@@ -131,26 +130,28 @@ public class Objets extends PolygonShape{
 			GameConstants.vitesseBalleTime = TimeUtils.millis();
 			GameConstants.vitesseBalle = GameConstants.vitesseBalleMax;	
 		}
-		else if(type == 5){												//Balle suplémentaire
+		else if(type == 5){												//Balle suplÃ©mentaire
 			Balle balle = new Balle(world, camera, this.body.getPosition().x, this.body.getPosition().y);
 			balle.balleActive = true;
 			balle.startImpulse = true;
 			balles.add(balle);
-			balle.body.applyLinearImpulse(new Vector2(0,-1), new Vector2(balle.body.getPosition().x, balle.body.getPosition().y), true);
+			balle.body.applyLinearImpulse(0f, -1f, balle.body.getPosition().x, balle.body.getPosition().y, true);
 		}
-		else if(type == 6){												//Balles suplémentaires
+		else if(type == 6){												//Balles suplÃ©mentaires
 			balleRandom = MathUtils.random(0, balles.size-1);
 			Balle balle = new Balle(world, camera, balles.get(balleRandom).body.getPosition().x, balles.get(balleRandom).body.getPosition().y);
 			balle.balleActive = true;
 			balle.startImpulse = true;
 			balles.add(balle);
-			balle.body.applyLinearImpulse(balles.get(balleRandom).body.getLinearVelocity().rotate(120), new Vector2(balle.body.getPosition().x, balle.body.getPosition().y), true);
+			Vector2 impulseA = balles.get(balleRandom).body.getLinearVelocity().cpy().rotate(120);
+			balle.body.applyLinearImpulse(impulseA.x, impulseA.y, balle.body.getPosition().x, balle.body.getPosition().y, true);
 			
 			Balle balle2 = new Balle(world, camera, balles.get(balleRandom).body.getPosition().x, balles.get(balleRandom).body.getPosition().y);
 			balle2.balleActive = true;
 			balle2.startImpulse = true;
 			balles.add(balle2);
-			balle2.body.applyLinearImpulse(balles.get(balleRandom).body.getLinearVelocity().rotate(-120), new Vector2(balle.body.getPosition().x, balle.body.getPosition().y), true);
+			Vector2 impulseB = balles.get(balleRandom).body.getLinearVelocity().cpy().rotate(-120);
+			balle2.body.applyLinearImpulse(impulseB.x, impulseB.y, balle.body.getPosition().x, balle.body.getPosition().y, true);
 		}
 		else if(type == 7){												//Activation du bouclier
 			GameConstants.bouclierActif = true;
@@ -190,7 +191,7 @@ public class Objets extends PolygonShape{
 				GameConstants.BOX_TO_WORLD * 2 * this.getHeight());
 	}
 	
-	public static void detruire(Array<Objets> array){
+	public static void detruire(Array<Objets> array, World world){
 		for(int i = 0; i < array.size; i++){
         	if(!array.get(i).body.isAwake()){
         		array.get(i).objetActif();

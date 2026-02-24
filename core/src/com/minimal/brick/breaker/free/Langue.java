@@ -5,7 +5,7 @@ public class Langue {
 	public String commencer, options, noter, removeAds,
 					langage, vitesse, sons, plusDApp,
 					lent, normal, rapide,
-					activÈ, dÈsactivÈ,
+					activ√©, d√©sactiv√©,
 					groupe, niveau,
 					choisirGroupe,
 					reprendre, recommencer, menu, quitter, 
@@ -33,8 +33,8 @@ public class Langue {
 			lent = "Slow";
 			normal = "Normal";
 			rapide = "Fast";
-			activÈ = "On";
-			dÈsactivÈ = "Off";
+			activ√© = "On";
+			d√©sactiv√© = "Off";
 			groupe = "Group";
 			niveau = "Level";
 			choisirGroupe = "Choose a group";
@@ -63,10 +63,10 @@ public class Langue {
 			jouer = "Play";
 			nouveauJeu = "Try our new game !";
 			break;
-		case 2:								//FranÁais
+		case 2:								//Fran√ßais
 			commencer = "Jouer";
 			options = "Options";
-			noter = "…valuer";
+			noter = "√âvaluer";
 			langage = "Langage";
 			vitesse = "Vitesse";
 			sons = "Son";
@@ -74,8 +74,8 @@ public class Langue {
 			lent = "Lent";
 			normal = "Normal";
 			rapide = "Rapide";
-			activÈ = "ActivÈ";
-			dÈsactivÈ = "DÈsactivÈ";
+			activ√© = "Activ√©";
+			d√©sactiv√© = "D√©sactiv√©";
 			groupe = "Groupe";
 			niveau = "Niveau";
 			choisirGroupe = "Choisissez un groupe";
@@ -83,19 +83,19 @@ public class Langue {
 			recommencer = "Recommencer";
 			menu = "Menu";
 			quitter =  "Quitter";
-			niveauComplete = "Niveau TerminÈ";
+			niveauComplete = "Niveau Termin√©";
 			suivant = "Suivant";
 			rejouer = "Rejouer";
 			fini = "Fini";
-			debloque = "DÈbloquÈ";
+			debloque = "D√©bloqu√©";
 			perdu = "Vous avez perdu !";
-			jeuComplete = "Jeu TerminÈ !";
-			microgravite = "MicrogravitÈ";
-			micrograviteDebloque = "Mode MicrogravitÈ\nDÈbloquÈ !";
+			jeuComplete = "Jeu Termin√© !";
+			microgravite = "Microgravit√©";
+			micrograviteDebloque = "Mode Microgravit√©\nD√©bloqu√© !";
 			epileptique = "Epileptique";
-			epileptiqueDebloque = "Mode Epileptique\nDÈbloquÈ !";
-			optionBloquee = "Finissez le jeu pour\ndÈbloquer ce mode";
-			microGraviteBloquee = "Finissez le groupe 3 pour\ndÈbloquer ce mode";
+			epileptiqueDebloque = "Mode Epileptique\nD√©bloqu√© !";
+			optionBloquee = "Finissez le jeu pour\nd√©bloquer ce mode";
+			microGraviteBloquee = "Finissez le groupe 3 pour\nd√©bloquer ce mode";
 			removeAds = "Supprimer\nLes Pubs";
 			textNotation = "Vous aimez\nMINIMAL BRICK BREAKER?\nVoulez vous le noter ?";
 			oui = "OUI";
@@ -111,18 +111,18 @@ public class Langue {
 			langage = "Idioma";
 			vitesse = "Velocidad";
 			sons = "Sonido";
-			plusDApp = "M·s\nApps";
+			plusDApp = "M√°s\nApps";
 			lent = "Lento";
 			normal = "Normal";
-			rapide = "R·pido";
-			activÈ = "Encendido";
-			dÈsactivÈ = "Apagado";
+			rapide = "R√°pido";
+			activ√© = "Encendido";
+			d√©sactiv√© = "Apagado";
 			groupe = "Grupo";
 			niveau = "Nivel";
 			choisirGroupe = "Seleccione un grupo";
 			reprendre = "Continuar";
 			recommencer = "Reiniciar";
-			menu = "Men˙";
+			menu = "Men√∫";
 			quitter =  "Salir";
 			niveauComplete = "Nivel Completado";
 			suivant = "Siguiente";
@@ -133,14 +133,14 @@ public class Langue {
 			jeuComplete = "Juego Completado !";
 			microgravite = "Micro\ngravedad";
 			micrograviteDebloque = "Microgravedad Modo\ndesbloqueado !";
-			epileptique = "EpilÈptico";
-			epileptiqueDebloque = "EpilÈptico Modo\ndesbloqueado !";
+			epileptique = "Epil√©ptico";
+			epileptiqueDebloque = "Epil√©ptico Modo\ndesbloqueado !";
 			optionBloquee = "Completa el juego para\ndesbloquear esta modo";
 			microGraviteBloquee = "Completa el grupo 3 para\ndesbloquear esta modo";
 			removeAds = "Eliminar\nAnuncios";
-			textNotation = "øTe gusta\nMINIMAL BRICK BREAKER?\nøLe eval˙e?";
-			oui = "SÕ";
-			plusTard = "M¡S\nTARDE";
+			textNotation = "¬øTe gusta\nMINIMAL BRICK BREAKER?\n¬øLe eval√∫e?";
+			oui = "S√ç";
+			plusTard = "M√ÅS\nTARDE";
 			jamais = "NUNCA";
 			jouer = "Jugar";
 			nouveauJeu = "Pruebe nuestro nuevo juego !";

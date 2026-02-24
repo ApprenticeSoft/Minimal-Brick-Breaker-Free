@@ -41,6 +41,7 @@ public class OptionScreen implements Screen{
 	private ButtonGroup langueGroupe, vitesseGroupe, sonGroupe;
 	private float dimensionsBouton, vitesseInactifX, vitesseY, langueY, sonY;
 	private boolean vitesseActif, langueActif, sonActif;
+	private boolean listenersBound;
 	
 	public OptionScreen(final MyGdxGame gam){
 		game = gam;
@@ -71,7 +72,7 @@ public class OptionScreen implements Screen{
 		
 		optionTable = new Table();
 		
-		//Menu général
+		//Menu gÃ©nÃ©ral
 		langueBouton = new TextButton(gam.langue.langage, menuButtonStyle);
 		vitesseBouton = new TextButton(gam.langue.vitesse, menuButtonStyle);
 		rateBouton = new TextButton(gam.langue.noter, menuButtonStyle);
@@ -90,8 +91,8 @@ public class OptionScreen implements Screen{
 		vitesseGroupe.setMaxCheckCount(1);
 		//Menu langue
 		englishBouton = new TextButton("English", optionButtonStyle);
-		francaisBouton = new TextButton("Français", optionButtonStyle);
-		espanolBouton = new TextButton("Español", optionButtonStyle);	
+		francaisBouton = new TextButton("FranÃ§ais", optionButtonStyle);
+		espanolBouton = new TextButton("EspaÃ±ol", optionButtonStyle);	
 		langueGroupe = new ButtonGroup();
 		langueGroupe.add(englishBouton);
 		langueGroupe.add(francaisBouton);
@@ -99,8 +100,8 @@ public class OptionScreen implements Screen{
 		langueGroupe.setMinCheckCount(1);
 		langueGroupe.setMaxCheckCount(1);
 		//Menu son
-		onBouton = new TextButton(gam.langue.activé, optionButtonStyle);
-		offBouton = new TextButton(gam.langue.désactivé, optionButtonStyle);	
+		onBouton = new TextButton(gam.langue.activÃ©, optionButtonStyle);
+		offBouton = new TextButton(gam.langue.dÃ©sactivÃ©, optionButtonStyle);	
 		sonGroupe = new ButtonGroup();
 		sonGroupe.add(onBouton);
 		sonGroupe.add(offBouton);
@@ -129,9 +130,9 @@ public class OptionScreen implements Screen{
 		optionTable.add(moreAppsBouton).row();
 		optionTable.add(retourBouton).height(Gdx.graphics.getWidth()/7).width(Gdx.graphics.getWidth()/7).left().spaceTop(5*Gdx.graphics.getHeight()/100);
 		optionTable.setX(14*Gdx.graphics.getWidth()/100);
-		optionTable.setY(50*(Gdx.graphics.getHeight() - game.actionResolver.hauteurBanniere())/100);
+		optionTable.setY(Gdx.graphics.getHeight()/2);
 		
-		//Transition entre les écrans
+		//Transition entre les Ã©crans
 		transitionImage = new Image(skin.getDrawable("Barre"));
 		transitionImage.setWidth(Gdx.graphics.getWidth());
 		transitionImage.setHeight(Gdx.graphics.getHeight());
@@ -156,6 +157,7 @@ public class OptionScreen implements Screen{
 		vitesseActif = false;
 		langueActif = false;
 		sonActif= false;
+		listenersBound = false;
 		vitesseInactifX = vitesseBouton.localToStageCoordinates(new Vector2(0,0)).x;
 		vitesseY = vitesseBouton.localToStageCoordinates(new Vector2(0,0)).y;
 		langueY = langueBouton.localToStageCoordinates(new Vector2(0,0)).y;
@@ -258,21 +260,27 @@ public class OptionScreen implements Screen{
 		stage.draw();	
 		
 		 //Utilisation du bouton BACK
-        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
-        	game.setScreen(new MainMenuScreen(game));
-        }
+	        if (Gdx.input.isKeyJustPressed(Keys.BACK)){
+	        	dispose();
+	        	game.setScreen(new MainMenuScreen(game));
+	        }
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		camera.setToOrtho(false, width, height);
+		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
 		Gdx.input.setInputProcessor(stage);
-		Gdx.input.setCatchBackKey(true);
+		Gdx.input.setCatchKey(Keys.BACK, true);
+		game.actionResolver.showBanner();
+		if (listenersBound) {
+			return;
+		}
+		listenersBound = true;
 		
 		//Utilisation du menu
 		langueBouton.addListener(new ClickListener(){
@@ -290,7 +298,7 @@ public class OptionScreen implements Screen{
 					francaisBouton.addAction(Actions.moveTo(vitesseInactifX + 48*Gdx.graphics.getWidth()/100, langueY, 0.7f, Interpolation.exp5Out));
 					espanolBouton.addAction(Actions.moveTo(vitesseInactifX + 72*Gdx.graphics.getWidth()/100, langueY, 0.7f, Interpolation.exp5Out));
 				}
-				//Fermeture des menus non utilisés
+				//Fermeture des menus non utilisÃ©s
 				if(vitesseActif){
 					vitesseActif = false;
 					lentBouton.addAction(Actions.moveTo(vitesseInactifX, vitesseY, 0.7f, Interpolation.exp5Out));	
@@ -320,7 +328,7 @@ public class OptionScreen implements Screen{
 					normalBouton.addAction(Actions.moveTo(vitesseInactifX + 48*Gdx.graphics.getWidth()/100, vitesseY, 0.7f, Interpolation.exp5Out));
 					rapideBouton.addAction(Actions.moveTo(vitesseInactifX + 72*Gdx.graphics.getWidth()/100, vitesseY, 0.7f, Interpolation.exp5Out));
 				}
-				//Fermeture des menus non utilisés
+				//Fermeture des menus non utilisÃ©s
 				if(langueActif){
 					langueActif = false;
 					englishBouton.addAction(Actions.moveTo(vitesseInactifX, langueY, 0.7f, Interpolation.exp5Out));	
@@ -348,7 +356,7 @@ public class OptionScreen implements Screen{
 					onBouton.addAction(Actions.moveTo(vitesseInactifX + 24*Gdx.graphics.getWidth()/100, sonY, 0.7f, Interpolation.exp5Out));	
 					offBouton.addAction(Actions.moveTo(vitesseInactifX + 48*Gdx.graphics.getWidth()/100, sonY, 0.7f, Interpolation.exp5Out));
 				}
-				//Fermeture des menus non utilisés
+				//Fermeture des menus non utilisÃ©s
 				if(langueActif){
 					langueActif = false;
 					englishBouton.addAction(Actions.moveTo(vitesseInactifX, langueY, 0.7f, Interpolation.exp5Out));	
@@ -464,8 +472,8 @@ public class OptionScreen implements Screen{
 		lentBouton.setText(game.langue.lent);
 		normalBouton.setText(game.langue.normal);
 		rapideBouton.setText(game.langue.rapide);
-		onBouton.setText(game.langue.activé);
-		offBouton.setText(game.langue.désactivé);
+		onBouton.setText(game.langue.activÃ©);
+		offBouton.setText(game.langue.dÃ©sactivÃ©);
 	}
 	
 	@Override

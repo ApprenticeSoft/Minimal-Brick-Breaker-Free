@@ -16,7 +16,6 @@ public class ActionBouton {
 			@Override
 			public void clicked(InputEvent event, float x, float y){
 				GameConstants.groupeSelectione = groupe;
-				System.out.println("Numéro du groupe : " + GameConstants.groupeSelectione);
 				GameConstants.choixNiveau = true;
 			}
 		});
@@ -33,9 +32,8 @@ public class ActionBouton {
 					game.setScreen(new GameScreen(game));
 				}
 				catch(Exception e){
-					System.out.println("Le niveau n'existe pas !");
+					game.setScreen(new MainMenuScreen(game));
 				}
-				System.out.println("Numéro du niveau : " + GameConstants.niveauSelectione);
 			}
 		});
 	}

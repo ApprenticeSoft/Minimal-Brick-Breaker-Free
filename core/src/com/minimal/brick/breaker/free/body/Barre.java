@@ -82,11 +82,11 @@ public class Barre extends PolygonShape{
 	}
 	
 	public void deplacement(){
-		//Déplacement de la barre
+		//DÃ©placement de la barre
 		if (Gdx.input.isTouched()) {
 			centre = GameConstants.WORLD_TO_BOX * Gdx.input.getX();
 
-			//La barre ne sort pas de l'écran
+			//La barre ne sort pas de l'Ã©cran
 			if(centre < width + ecart)
 				centre = width + ecart;
 			if(centre > camera.viewportWidth - width - ecart)

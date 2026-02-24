@@ -18,8 +18,8 @@ public class Laser extends PolygonShape{
 	public Body body;
 	private BodyDef bodyDef;
 	private FixtureDef fixtureDef;
-	private static World world;
-	private static Camera camera;
+	private final World world;
+	private final Camera camera;
 	private float  width, height;
 	public boolean visible;
 	
@@ -83,14 +83,14 @@ public class Laser extends PolygonShape{
 					GameConstants.BOX_TO_WORLD * 2 * this.getHeight());
 	}
 	
-	public static void detruire(Array<Laser> array){
+	public static void detruire(Array<Laser> array, World world, float viewportHeight){
 		for(int i = 0; i < array.size; i++){
         	if(!array.get(i).visible){
         		array.get(i).body.setActive(false);
         		world.destroyBody(array.get(i).body);
         		array.removeIndex(i);
         	}
-        	else if(array.get(i).body.getPosition().y > camera.viewportHeight){
+        	else if(array.get(i).body.getPosition().y > viewportHeight){
         		array.get(i).body.setActive(false);
         		world.destroyBody(array.get(i).body);
         		array.removeIndex(i);

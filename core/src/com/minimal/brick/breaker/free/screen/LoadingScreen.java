@@ -35,8 +35,6 @@ public class LoadingScreen implements Screen{
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-		Donnees.setInterstitial(Donnees.getInterstitial() + 1);
-		
 		textureLogo = new Texture(Gdx.files.internal("Images/Logo.png"), true);
 		textureLogo.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		imageLogo = new Image(textureLogo);
@@ -143,10 +141,13 @@ public class LoadingScreen implements Screen{
 
 	@Override
 	public void resize(int width, int height) {
+		camera.setToOrtho(false, width, height);
+		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
+		game.actionResolver.hideBanner();
 		stage.addActor(imageLogo);
 		
 		imageLogo.addAction(Actions.sequence(Actions.alpha(0)
@@ -171,4 +172,3 @@ public class LoadingScreen implements Screen{
 		stage.dispose();
 	}
 }
-
