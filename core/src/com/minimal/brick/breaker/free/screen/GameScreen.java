@@ -56,6 +56,10 @@ import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class GameScreen extends InputAdapter implements Screen{
 
+	private static final int OBJECT_DROP_CHANCE_ON_BALL_HIT = 31; // 26% +20% ~= 31%
+	private static final int OBJECT_DROP_CHANCE_ON_LASER_BALL_HIT = 20; // 17% +20% ~= 20%
+	private static final int OBJECT_DROP_CHANCE_ON_LASER_HIT = 29; // 24% +20% ~= 29%
+
 	final MyGdxGame game;
 	OrthographicCamera camera;
 	World world; 
@@ -220,13 +224,14 @@ public class GameScreen extends InputAdapter implements Screen{
 			float endScreenLabelScale = webBuild ? 1f : 2f;
 			float endScreenButtonWidth = webBuild ? Gdx.graphics.getWidth() / 3.6f : Gdx.graphics.getWidth() / 3f;
 			float endScreenButtonGap = webBuild ? Gdx.graphics.getWidth() / 400f : 0f;
+			float endScreenRowWidth = 2f * endScreenButtonWidth + endScreenButtonGap;
 			labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
 			labelComplete.setFontScale(endScreenLabelScale);
 			labelComplete.setAlignment(Align.center);
 		
 		tableFin = new Table();
 		tableFin.row().colspan(2);
-		tableFin.add(labelComplete).spaceBottom(Gdx.graphics.getHeight()/30);
+		tableFin.add(labelComplete).width(endScreenRowWidth).spaceBottom(Gdx.graphics.getHeight()/30);
 		tableFin.row().height(Gdx.graphics.getHeight()/12);
 		tableFin.add(nextBouton).width(endScreenButtonWidth).padRight(endScreenButtonGap);
 		tableFin.add(replayBouton).width(endScreenButtonWidth);
@@ -594,8 +599,7 @@ public class GameScreen extends InputAdapter implements Screen{
 				    			}
 
 						    	//Apparition des objets
-						    	spawnObjet = MathUtils.random(1,100);
-						    	if(spawnObjet > 38 && spawnObjet < 65 && brique.opacite == 0 && GameConstants.briquesDetruites > 2){
+						    	if(rollObjectDrop(OBJECT_DROP_CHANCE_ON_BALL_HIT) && brique.opacite == 0 && GameConstants.briquesDetruites > 2){
 						    		GameConstants.briquesDetruites = 0;
 						    		spawn = true;
 						    		spawnX = a.getPosition().x;
@@ -672,8 +676,7 @@ public class GameScreen extends InputAdapter implements Screen{
 				    			}
 
 						    	//Apparition des objets
-						    	spawnObjet = MathUtils.random(1,100);
-						    	if(spawnObjet > 42 && spawnObjet < 60 && GameConstants.briquesDetruites > 2){
+						    	if(rollObjectDrop(OBJECT_DROP_CHANCE_ON_LASER_BALL_HIT) && GameConstants.briquesDetruites > 2){
 						    		GameConstants.briquesDetruites = 0;
 						    		spawn = true;
 						    		spawnX = a.getPosition().x;
@@ -728,8 +731,7 @@ public class GameScreen extends InputAdapter implements Screen{
 				    			}
 
 						    	//Apparition des objets
-						    	spawnObjet = MathUtils.random(1,100);
-						    	if(spawnObjet > 45 && spawnObjet < 70 && brique.opacite == 0 && GameConstants.briquesDetruites > 2){
+						    	if(rollObjectDrop(OBJECT_DROP_CHANCE_ON_LASER_HIT) && brique.opacite == 0 && GameConstants.briquesDetruites > 2){
 						    		GameConstants.briquesDetruites = 0;
 						    		spawn = true;
 						    		spawnX = brique.body.getPosition().x;
@@ -994,6 +996,11 @@ public class GameScreen extends InputAdapter implements Screen{
 					|| Gdx.input.isKeyJustPressed(Keys.P);
 		}
 		return Gdx.input.isKeyJustPressed(Keys.BACK);
+	}
+
+	private boolean rollObjectDrop(int dropChancePercent) {
+		spawnObjet = MathUtils.random(1, 100);
+		return spawnObjet <= dropChancePercent;
 	}
 
 	private void updatePauseButtonBounds() {

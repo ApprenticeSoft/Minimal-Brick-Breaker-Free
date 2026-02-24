@@ -126,3 +126,18 @@ This file summarizes all major work completed to revive and optimize this Androi
   - Pause/resume toggles on `Esc`, `Space`, `P`.
   - Web-only ball speed multiplier set to `1.5x`.
   - Removed rate/new-game promo UI from web flow.
+
+## Latest Update (Brick - Web + Android)
+- End-screen button spacing parity (web):
+  - `Level Cleared` horizontal spacing now matches `You Lost` by constraining the title row width to the exact button-row width.
+  - Keeps both action buttons fully on-screen on web/HTTPS layout.
+- Power-up spawn rate increased by +20% (relative) in core gameplay logic (applies to Android and HTML):
+  - Ball hits: `26%` -> `31%`
+  - Ball-laser hits: `17%` -> `20%`
+  - Laser projectile hits: `24%` -> `29%`
+  - Implemented through an explicit `rollObjectDrop(int dropChancePercent)` helper in `GameScreen`.
+- Android validation for the above:
+  - Built successfully with `./gradlew :android:assembleDebug`.
+- Web deployment:
+  - Rebuilt with `./gradlew :core:compileJava :html:dist`.
+  - Deployed to Pi and synced Apache web root (`/var/www/brick`) for HTTPS host `brick.marcvidal.ca`.
