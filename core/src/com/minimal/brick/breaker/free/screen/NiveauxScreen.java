@@ -48,6 +48,8 @@ public class NiveauxScreen implements Screen{
 	private float scrollPaneGroupeActif, scrollPaneGroupeInactif, tableNiveauxActif, tableNiveauxInactif;
 	private boolean listenersBound;
 	private GlyphLayout titleLayout;
+	private final float baseScreenWidth;
+	private final float baseScreenHeight;
 	private float appliedBottomInsetPx;
 	
 	
@@ -59,6 +61,8 @@ public class NiveauxScreen implements Screen{
 		action = new ActionBouton();
 		listenersBound = false;
 		titleLayout = new GlyphLayout();
+		baseScreenWidth = Math.max(1f, Gdx.graphics.getWidth());
+		baseScreenHeight = Math.max(1f, Gdx.graphics.getHeight());
 		appliedBottomInsetPx = -1f;
 		
 		camera = new OrthographicCamera();
@@ -228,10 +232,21 @@ public class NiveauxScreen implements Screen{
 		} else {
 			title = game.langue.groupe.toUpperCase() + " " + GameConstants.groupeSelectione;
 		}
-		BitmapFont titleFont = game.assets.get("fontTitre.ttf", BitmapFont.class);
-		titleLayout.setText(titleFont, title);
-		titleFont.draw(game.batch, title, Gdx.graphics.getWidth()/2 - titleLayout.width/2, 90*Gdx.graphics.getHeight()/100);
-		game.batch.end();
+			BitmapFont titleFont = game.assets.get("fontTitre.ttf", BitmapFont.class);
+			titleFont.setUseIntegerPositions(false);
+			float widthScale = Gdx.graphics.getWidth() / baseScreenWidth;
+			float heightScale = Gdx.graphics.getHeight() / baseScreenHeight;
+			float baseScale = Math.min(widthScale, heightScale);
+			titleFont.getData().setScale(baseScale);
+			titleLayout.setText(titleFont, title);
+			float targetWidth = Gdx.graphics.getWidth() * (GameConstants.choixNiveau ? 0.6f : 0.7f);
+			if (titleLayout.width > 0f) {
+				float fitScale = targetWidth / titleLayout.width;
+				titleFont.getData().setScale(baseScale * fitScale);
+			}
+			titleLayout.setText(titleFont, title);
+			titleFont.draw(game.batch, title, Gdx.graphics.getWidth()/2 - titleLayout.width/2, 90*Gdx.graphics.getHeight()/100);
+			game.batch.end();
 		
 		// Déplacement des affichages des groupes et niveaux
 		if(!GameConstants.choixNiveau){
@@ -290,6 +305,9 @@ public class NiveauxScreen implements Screen{
 	public void resize(int width, int height) {
 		camera.setToOrtho(false, width, height);
 		stage.getViewport().update(width, height, true);
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 	}
 
 	@Override

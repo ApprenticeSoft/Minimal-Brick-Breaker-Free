@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
@@ -26,6 +27,8 @@ import com.minimal.brick.breaker.free.MyGdxGame;
 import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class OptionScreen implements Screen{
+	private static final float OPTION_TITLE_WIDTH_RATIO = 0.25f;
+	private static final float OPTION_TITLE_Y_RATIO = 0.85f;
 	
 	final MyGdxGame game;
 	OrthographicCamera camera;
@@ -43,9 +46,15 @@ public class OptionScreen implements Screen{
 	private float dimensionsBouton, vitesseInactifX, vitesseY, langueY, sonY;
 	private boolean vitesseActif, langueActif, sonActif;
 	private boolean listenersBound;
+	private final float baseScreenWidth;
+	private final float baseScreenHeight;
+	private BitmapFont optionTitleFont;
+	private GlyphLayout optionTitleLayout;
 	
 	public OptionScreen(final MyGdxGame gam){
 		game = gam;
+		baseScreenWidth = Math.max(1f, Gdx.graphics.getWidth());
+		baseScreenHeight = Math.max(1f, Gdx.graphics.getHeight());
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -65,19 +74,24 @@ public class OptionScreen implements Screen{
 		optionButtonStyle = new TextButtonStyle();
 		optionButtonStyle.up = skin.getDrawable("BoutonPatch");
 		optionButtonStyle.down = skin.getDrawable("BoutonCheckedPatch");
-		optionButtonStyle.checked = skin.getDrawable("BoutonCheckedPatch");
-		optionButtonStyle.font = game.assets.get("fontOption.ttf", BitmapFont.class);
-		optionButtonStyle.fontColor = Color.WHITE;
-		optionButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
-		optionButtonStyle.checkedFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+			optionButtonStyle.checked = skin.getDrawable("BoutonCheckedPatch");
+			optionButtonStyle.font = game.assets.get("fontOption.ttf", BitmapFont.class);
+			optionButtonStyle.fontColor = Color.WHITE;
+			optionButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+			optionButtonStyle.checkedFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+
+			optionTitleFont = game.assets.get("fontTitre.ttf", BitmapFont.class);
+			optionTitleFont.setUseIntegerPositions(false);
+			optionTitleLayout = new GlyphLayout();
+			
+			optionTable = new Table();
 		
-		optionTable = new Table();
-		
-		//Menu général
-		langueBouton = new TextButton(gam.langue.langage, menuButtonStyle);
-		vitesseBouton = new TextButton(gam.langue.vitesse, menuButtonStyle);
-		sonBouton = new TextButton(gam.langue.sons, menuButtonStyle);
-		retourBouton = new TextButton("<", menuButtonStyle);
+			//Menu général
+			langueBouton = new TextButton(gam.langue.langage, menuButtonStyle);
+			applyLanguageButtonFontScale();
+			vitesseBouton = new TextButton(gam.langue.vitesse, menuButtonStyle);
+			sonBouton = new TextButton(gam.langue.sons, menuButtonStyle);
+			retourBouton = new TextButton("<", menuButtonStyle);
 		//Menu Vitesse
 		lentBouton = new TextButton(gam.langue.lent, optionButtonStyle);
 		normalBouton = new TextButton(gam.langue.normal, optionButtonStyle);
@@ -241,8 +255,13 @@ public class OptionScreen implements Screen{
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0.27f, 0.695f, 0.613f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		applyLanguageButtonFontScale();
 		
 		game.batch.setProjectionMatrix(camera.combined);
+		game.batch.begin();
+		updateOptionTitleLayout();
+		optionTitleFont.draw(game.batch, optionTitleLayout, Gdx.graphics.getWidth() / 2f - optionTitleLayout.width / 2f, OPTION_TITLE_Y_RATIO * Gdx.graphics.getHeight());
+		game.batch.end();
 		
 		stage.act();
 		stage.draw();	
@@ -257,6 +276,11 @@ public class OptionScreen implements Screen{
 	public void resize(int width, int height) {
 		camera.setToOrtho(false, width, height);
 		stage.getViewport().update(width, height, true);
+		applyLanguageButtonFontScale();
+		updateOptionTitleLayout();
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 	}
 
 	@Override
@@ -265,6 +289,7 @@ public class OptionScreen implements Screen{
 		Gdx.input.setInputProcessor(stage);
 		Gdx.input.setCatchKey(Keys.BACK, true);
 		game.actionResolver.showBanner();
+		applyLanguageButtonFontScale();
 		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
 			UiActorUtils.centerTextButtons(stage.getRoot());
 		}
@@ -446,6 +471,7 @@ public class OptionScreen implements Screen{
 		rapideBouton.setText(game.langue.rapide);
 		onBouton.setText(game.langue.activé);
 		offBouton.setText(game.langue.désactivé);
+		applyLanguageButtonFontScale();
 	}
 	
 	@Override
@@ -467,5 +493,34 @@ public class OptionScreen implements Screen{
 	public void dispose() {
 		skin.dispose();
 		stage.dispose();
+	}
+
+	private void updateOptionTitleLayout() {
+		float widthScale = Gdx.graphics.getWidth() / baseScreenWidth;
+		float heightScale = Gdx.graphics.getHeight() / baseScreenHeight;
+		float baseScale = Math.min(widthScale, heightScale);
+		optionTitleFont.getData().setScale(baseScale);
+		String titleText = game.langue.options.toUpperCase();
+		optionTitleLayout.setText(optionTitleFont, titleText);
+		float targetWidth = Gdx.graphics.getWidth() * OPTION_TITLE_WIDTH_RATIO;
+		if (optionTitleLayout.width > 0f) {
+			float fitScale = targetWidth / optionTitleLayout.width;
+			optionTitleFont.getData().setScale(baseScale * fitScale);
+		}
+		optionTitleLayout.setText(optionTitleFont, titleText);
+	}
+
+	private void applyLanguageButtonFontScale() {
+		if (langueBouton == null || langueBouton.getLabel() == null) {
+			return;
+		}
+		float baseScaleX = 1f;
+		float baseScaleY = 1f;
+		if (vitesseBouton != null && vitesseBouton.getLabel() != null) {
+			baseScaleX = vitesseBouton.getLabel().getFontScaleX();
+			baseScaleY = vitesseBouton.getLabel().getFontScaleY();
+		}
+		langueBouton.getLabel().setFontScale(baseScaleX, baseScaleY);
+		langueBouton.invalidateHierarchy();
 	}
 }

@@ -31,6 +31,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -59,6 +60,8 @@ public class GameScreen extends InputAdapter implements Screen{
 	private static final int OBJECT_DROP_CHANCE_ON_BALL_HIT = 31; // 26% +20% ~= 31%
 	private static final int OBJECT_DROP_CHANCE_ON_LASER_BALL_HIT = 20; // 17% +20% ~= 20%
 	private static final int OBJECT_DROP_CHANCE_ON_LASER_HIT = 29; // 24% +20% ~= 29%
+	private static final float WEB_END_SCREEN_LABEL_BASE_SCALE = 0.5f;
+	private static final float MOBILE_END_SCREEN_LABEL_BASE_SCALE = 2f;
 
 	final MyGdxGame game;
 	OrthographicCamera camera;
@@ -109,6 +112,14 @@ public class GameScreen extends InputAdapter implements Screen{
 	private boolean listenersBound;
 	private final boolean webBuild;
 	private final boolean showPauseButton;
+	private final float baseScreenWidth;
+	private final float baseScreenHeight;
+	private Cell<Label> tableFinLabelCell;
+	private Cell<TextButton> tableFinNextCell;
+	private Cell<TextButton> tableFinMenuCell;
+	private Cell<Label> tablePerduLabelCell;
+	private Cell<TextButton> tablePerduReplayCell;
+	private Cell<TextButton> tablePerduMenuCell;
 	
 	Box2DDebugRenderer debugRenderer; 
 	
@@ -119,6 +130,8 @@ public class GameScreen extends InputAdapter implements Screen{
 		listenersBound = false;
 		webBuild = Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL;
 		showPauseButton = !webBuild;
+		baseScreenWidth = Math.max(1f, Gdx.graphics.getWidth());
+		baseScreenHeight = Math.max(1f, Gdx.graphics.getHeight());
 		couleurEdit = GameConstants.groupeSelectione;
 		appliedColorGroup = -1;
 		if(GameConstants.epileptique){
@@ -218,25 +231,21 @@ public class GameScreen extends InputAdapter implements Screen{
 			pauseButtonStyle.down = new TextureRegionDrawable(new TextureRegion(pauseButtonDownTexture));
 			pauseButtonStyle.font = game.assets.get("font1.ttf", BitmapFont.class);
 			pauseButtonStyle.fontColor = Color.WHITE;
-			pauseButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+				pauseButtonStyle.downFontColor = new Color(0.27f, 0.695f, 0.613f, 1);
+				
+				labelStyle = new LabelStyle(game.assets.get("font1.ttf", BitmapFont.class), Color.WHITE);
+				labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
+				labelComplete.setAlignment(Align.center);
 			
-			labelStyle = new LabelStyle(game.assets.get("font1.ttf", BitmapFont.class), Color.WHITE);
-			float endScreenLabelScale = webBuild ? 1f : 2f;
-			float endScreenButtonWidth = webBuild ? Gdx.graphics.getWidth() / 3.6f : Gdx.graphics.getWidth() / 3f;
-			float endScreenButtonGap = webBuild ? Gdx.graphics.getWidth() / 400f : 0f;
-			float endScreenRowWidth = 2f * endScreenButtonWidth + endScreenButtonGap;
-			labelComplete = new Label(gam.langue.niveauComplete, labelStyle);
-			labelComplete.setFontScale(endScreenLabelScale);
-			labelComplete.setAlignment(Align.center);
-		
-		tableFin = new Table();
-		tableFin.row().colspan(2);
-		tableFin.add(labelComplete).width(endScreenRowWidth).spaceBottom(Gdx.graphics.getHeight()/30);
-		tableFin.row().height(Gdx.graphics.getHeight()/12);
-		tableFin.add(nextBouton).width(endScreenButtonWidth).padRight(endScreenButtonGap);
-		tableFin.add(replayBouton).width(endScreenButtonWidth);
-		tableFin.setX(-Gdx.graphics.getWidth()/2);
-		tableFin.setY(Gdx.graphics.getHeight()/2 + tableFin.getPrefHeight()/4);
+			tableFin = new Table();
+			tableFin.row().colspan(2);
+			tableFinLabelCell = tableFin.add(labelComplete);
+			tableFinLabelCell.colspan(2);
+			tableFin.row().height(Gdx.graphics.getHeight()/12);
+			tableFinNextCell = tableFin.add(nextBouton);
+			tableFinMenuCell = tableFin.add(replayBouton);
+			tableFin.setX(-Gdx.graphics.getWidth()/2);
+			tableFin.setY(Gdx.graphics.getHeight()/2 + tableFin.getPrefHeight()/4);
 		
 		//Table pause
 			resumeBouton = new TextButton(gam.langue.reprendre, textButtonStyle);
@@ -264,21 +273,21 @@ public class GameScreen extends InputAdapter implements Screen{
 		tablePause.setY(Gdx.graphics.getHeight()/2 - tablePause.getHeight()/2);
 		//tablePause.setBackground(skin.getDrawable("FondTable5"));
 
-		//Table perdu
-		tablePerdu = new Table();
-		labelPerdu = new Label(gam.langue.perdu, labelStyle);
-		labelPerdu.setFontScale(endScreenLabelScale);
-		labelPerdu.setAlignment(Align.center);
-		restartBouton2 = new TextButton(gam.langue.rejouer, textButtonStyle);	
-		menuBouton2 = new TextButton(gam.langue.menu, textButtonStyle);
-		
-		tablePerdu.row().colspan(2);
-		tablePerdu.add(labelPerdu).spaceBottom(Gdx.graphics.getHeight()/30);
-		tablePerdu.row().height(Gdx.graphics.getHeight()/12);
-		tablePerdu.add(restartBouton2).width(endScreenButtonWidth).padRight(endScreenButtonGap);
-		tablePerdu.add(menuBouton2).width(endScreenButtonWidth);
-		tablePerdu.setX(-Gdx.graphics.getWidth()/2);
-		tablePerdu.setY(Gdx.graphics.getHeight()/2 + tablePerdu.getPrefHeight()/4);
+			//Table perdu
+			tablePerdu = new Table();
+			labelPerdu = new Label(gam.langue.perdu, labelStyle);
+			labelPerdu.setAlignment(Align.center);
+			restartBouton2 = new TextButton(gam.langue.rejouer, textButtonStyle);	
+			menuBouton2 = new TextButton(gam.langue.menu, textButtonStyle);
+			
+			tablePerdu.row().colspan(2);
+			tablePerduLabelCell = tablePerdu.add(labelPerdu);
+			tablePerduLabelCell.colspan(2);
+			tablePerdu.row().height(Gdx.graphics.getHeight()/12);
+			tablePerduReplayCell = tablePerdu.add(restartBouton2);
+			tablePerduMenuCell = tablePerdu.add(menuBouton2);
+			tablePerdu.setX(-Gdx.graphics.getWidth()/2);
+			tablePerdu.setY(Gdx.graphics.getHeight()/2 + tablePerdu.getPrefHeight()/4);
 		
 		//Bouton goupe debloqué
 		textButtonStyleFini = new TextButtonStyle();
@@ -337,10 +346,11 @@ public class GameScreen extends InputAdapter implements Screen{
 		stage.addActor(jeuFini);
 		stage.addActor(micrograviteDebloque);
 		stage.addActor(epileptiqueDebloque);
-		if (pauseBouton != null) {
-			stage.addActor(pauseBouton);
-		}
-		tableFin.setVisible(false);
+			if (pauseBouton != null) {
+				stage.addActor(pauseBouton);
+			}
+			tableFin.setVisible(false);
+			updateEndScreenLayout();
 
         debugRenderer = new Box2DDebugRenderer();
         
@@ -554,6 +564,10 @@ public class GameScreen extends InputAdapter implements Screen{
 		camera.update();
 		stage.getViewport().update(width, height, true);
 		updatePauseButtonBounds();
+		updateEndScreenLayout();
+		if (webBuild) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 	}
 
 	@Override
@@ -1001,6 +1015,55 @@ public class GameScreen extends InputAdapter implements Screen{
 	private boolean rollObjectDrop(int dropChancePercent) {
 		spawnObjet = MathUtils.random(1, 100);
 		return spawnObjet <= dropChancePercent;
+	}
+
+	private void updateEndScreenLayout() {
+		if (tableFin == null || tablePerdu == null || labelComplete == null || labelPerdu == null) {
+			return;
+		}
+		float width = Gdx.graphics.getWidth();
+		float height = Gdx.graphics.getHeight();
+		float widthScale = width / baseScreenWidth;
+		float heightScale = height / baseScreenHeight;
+		float responsiveScale = Math.min(widthScale, heightScale);
+		float baseLabelScale = webBuild ? WEB_END_SCREEN_LABEL_BASE_SCALE : MOBILE_END_SCREEN_LABEL_BASE_SCALE;
+		float endScreenLabelScale = baseLabelScale * responsiveScale;
+		labelComplete.setFontScale(endScreenLabelScale);
+		labelPerdu.setFontScale(endScreenLabelScale);
+		labelComplete.setAlignment(Align.center);
+		labelPerdu.setAlignment(Align.center);
+
+		float endScreenButtonWidth = webBuild ? width / 3.6f : width / 3f;
+		float endScreenButtonGap = webBuild ? width / 400f : 0f;
+		float endScreenButtonHeight = height / 12f;
+		float endScreenRowWidth = 2f * endScreenButtonWidth + endScreenButtonGap;
+		float endScreenLabelSpacing = height / 30f;
+
+		if (tableFinLabelCell != null) {
+			tableFinLabelCell.width(endScreenRowWidth).spaceBottom(endScreenLabelSpacing);
+		}
+		if (tableFinNextCell != null) {
+			tableFinNextCell.width(endScreenButtonWidth).height(endScreenButtonHeight).padRight(endScreenButtonGap);
+		}
+		if (tableFinMenuCell != null) {
+			tableFinMenuCell.width(endScreenButtonWidth).height(endScreenButtonHeight);
+		}
+		if (tablePerduLabelCell != null) {
+			tablePerduLabelCell.width(endScreenRowWidth).spaceBottom(endScreenLabelSpacing);
+		}
+		if (tablePerduReplayCell != null) {
+			tablePerduReplayCell.width(endScreenButtonWidth).height(endScreenButtonHeight).padRight(endScreenButtonGap);
+		}
+		if (tablePerduMenuCell != null) {
+			tablePerduMenuCell.width(endScreenButtonWidth).height(endScreenButtonHeight);
+		}
+
+		tableFin.invalidateHierarchy();
+		tablePerdu.invalidateHierarchy();
+		tableFin.setY(height / 2f + tableFin.getPrefHeight() / 4f);
+		tablePerdu.setY(height / 2f + tablePerdu.getPrefHeight() / 4f);
+		tableFin.setX(tableFin.getX() > 0f ? width / 2f : -width / 2f);
+		tablePerdu.setX(tablePerdu.getX() > 0f ? width / 2f : -width / 2f);
 	}
 
 	private void updatePauseButtonBounds() {

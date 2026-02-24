@@ -19,6 +19,7 @@ import com.minimal.brick.breaker.free.menus.MenuPrincipale;
 import com.minimal.brick.breaker.free.ui.UiActorUtils;
 
 public class MainMenuScreen implements Screen {
+	private static final String TITLE_TEXT = "MINIMAL BRICK BREAKER";
 
 	final MyGdxGame game;
 	OrthographicCamera camera;
@@ -26,13 +27,17 @@ public class MainMenuScreen implements Screen {
 	private Skin skin;
 	private TextureAtlas textureAtlas;
 	private BitmapFont fontTitre;
-	private float titleWidth;
+	private GlyphLayout titleLayout;
+	private final float baseScreenWidth;
+	private final float baseScreenHeight;
 	private MenuPrincipale menuPrincipale;
 	private boolean listenersBound;
 	
 	public MainMenuScreen(final MyGdxGame gam){
 		game = gam;
 		listenersBound = false;
+		baseScreenWidth = Math.max(1f, Gdx.graphics.getWidth());
+		baseScreenHeight = Math.max(1f, Gdx.graphics.getHeight());
 	
 		game.ensureMenuMusic();
 		
@@ -46,7 +51,9 @@ public class MainMenuScreen implements Screen {
 		skin.addRegions(textureAtlas);
 		
 		fontTitre = game.assets.get("fontTitre.ttf", BitmapFont.class);
-		titleWidth = new GlyphLayout(fontTitre, "MINIMAL BRICK BREAKER").width;
+		fontTitre.setUseIntegerPositions(false);
+		titleLayout = new GlyphLayout();
+		updateTitleLayout();
 		
 		menuPrincipale = new MenuPrincipale(gam, skin, stage, new Color(0.27f, 0.695f, 0.613f, 1));
 	}
@@ -59,8 +66,9 @@ public class MainMenuScreen implements Screen {
 	
 		game.batch.setProjectionMatrix(camera.combined);
 		game.batch.begin();
-			fontTitre.draw(game.batch, "MINIMAL BRICK BREAKER", 
-							Gdx.graphics.getWidth()/2 - titleWidth/2, 
+			updateTitleLayout();
+			fontTitre.draw(game.batch, TITLE_TEXT,
+							Gdx.graphics.getWidth()/2 - titleLayout.width/2,
 							85*Gdx.graphics.getHeight()/100);
 		game.batch.end();
 		stage.act();
@@ -74,6 +82,10 @@ public class MainMenuScreen implements Screen {
 	public void resize(int width, int height) {
 		camera.setToOrtho(false, width, height);
 		stage.getViewport().update(width, height, true);
+		updateTitleLayout();
+		if (Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+			UiActorUtils.centerTextButtons(stage.getRoot());
+		}
 	}
 
 	@Override
@@ -120,6 +132,20 @@ public class MainMenuScreen implements Screen {
 	public void dispose() {
 		skin.dispose();
 		stage.dispose();
+	}
+
+	private void updateTitleLayout() {
+		float widthScale = Gdx.graphics.getWidth() / baseScreenWidth;
+		float heightScale = Gdx.graphics.getHeight() / baseScreenHeight;
+		float baseScale = Math.min(widthScale, heightScale);
+		fontTitre.getData().setScale(baseScale);
+		titleLayout.setText(fontTitre, TITLE_TEXT);
+		float targetWidth = Gdx.graphics.getWidth() * 0.8f;
+		if (titleLayout.width > 0f) {
+			float fitScale = targetWidth / titleLayout.width;
+			fontTitre.getData().setScale(baseScale * fitScale);
+		}
+		titleLayout.setText(fontTitre, TITLE_TEXT);
 	}
 
 }

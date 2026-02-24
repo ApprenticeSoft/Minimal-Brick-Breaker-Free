@@ -35,9 +35,17 @@ public class LoadingScreen implements Screen {
         private static final float TITLE_TEXT_SCALE = 0.336f;
         private static final float SMALL_TEXT_SCALE = 0.20f;
         private static final float MEDIUM_TEXT_SCALE = 0.24f;
+        private static final float REFERENCE_WIDTH = 607f;
+        private static final float REFERENCE_HEIGHT = 1080f;
 
         public WebFontLoader(FileHandleResolver resolver) {
             super(resolver);
+        }
+
+        private static float getResolutionScale() {
+            float widthScale = Gdx.graphics.getWidth() / REFERENCE_WIDTH;
+            float heightScale = Gdx.graphics.getHeight() / REFERENCE_HEIGHT;
+            return Math.min(widthScale, heightScale);
         }
 
         @Override
@@ -63,6 +71,7 @@ public class LoadingScreen implements Screen {
                 fontFile = "Fonts/web_ui.fnt";
                 scale = BUTTON_TEXT_SCALE;
             }
+            scale *= getResolutionScale();
             BitmapFont font = new BitmapFont(Gdx.files.internal(fontFile), false);
             font.getData().setScale(scale);
             font.setUseIntegerPositions(false);
